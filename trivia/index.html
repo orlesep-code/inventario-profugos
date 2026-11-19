@@ -1,0 +1,1851 @@
+<!doctype html><html><head><meta charset=utf8><meta name="theme-color" content="#141110"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Trivia Prófugos</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;600;800&display=swap">
+<style>
+/* Layout: one-screen game app. Poster-style "se busca" headings, 2x2 answer board like a TV game show, phones get big colored buttons. */
+:root{
+  --ink:#141110; --panel:#201b18; --panel2:#2a231f; --line:#3d332c;
+  --paper:#f3e9d8; --muted:#b3a48f; --amber:#f2a33a;
+  --red:#d9433a; --blue:#2d7bdc; --yellow:#e2ac12; --green:#2c9f4f;
+  --display:'Anton',Impact,'Arial Narrow Bold',sans-serif;
+  --body:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--ink);color:var(--paper);font-family:var(--body);font-size:16px;line-height:1.45}
+*{box-sizing:border-box}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.app{min-height:100%;display:flex;flex-direction:column;gap:20px;max-width:1500px;margin:0 auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px}
+.eyebrow{font-weight:800;letter-spacing:.18em;text-transform:uppercase;font-size:12px;color:var(--amber)}
+.display{font-family:var(--display);text-transform:uppercase;letter-spacing:.01em;line-height:1;text-wrap:balance;margin:0}
+.muted{color:var(--muted)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.stack{display:flex;flex-direction:column;gap:14px}
+.btn{border:0;border-radius:10px;padding:14px 22px;font-weight:800;font-size:17px;background:var(--panel2);border:1px solid var(--line)}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--amber);color:var(--ink);border-color:var(--amber)}
+a.btn{text-decoration:none;color:var(--paper);display:inline-block}
+a.btn.primary{color:var(--ink)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.big{font-size:20px;padding:18px 28px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label{font-weight:600;font-size:14px;color:var(--muted)}
+input[type=text],textarea,select{background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:13px 14px;font-size:18px;width:100%}
+textarea{font-size:14px;min-height:110px;resize:vertical}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
+
+/* topbar */
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{font-family:var(--display);font-size:22px;letter-spacing:.04em;text-transform:uppercase}
+.brand b{color:var(--amber);font-weight:400}
+
+/* home */
+.hero{display:grid;grid-template-columns:1.2fr 1fr;gap:24px;align-items:stretch;flex:1}
+.wanted{border:2px solid var(--amber);border-radius:6px;padding:28px;display:flex;flex-direction:column;justify-content:center;gap:16px;
+  background:repeating-linear-gradient(135deg,transparent 0 14px,rgba(242,163,58,.035) 14px 28px)}
+.wanted .display{font-size:clamp(44px,7vw,104px)}
+.wanted .display span{color:var(--amber)}
+@media (max-width:820px){.hero{grid-template-columns:1fr}}
+
+/* chips */
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{border:1px solid var(--line);background:var(--ink);border-radius:999px;padding:10px 16px;font-weight:600}
+.chip[aria-pressed=true]{background:var(--amber);color:var(--ink);border-color:var(--amber)}
+.chip small{opacity:.7;font-weight:400;margin-left:4px}
+
+/* lobby */
+.lobby{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:24px;flex:1}
+@media (max-width:820px){.lobby{grid-template-columns:1fr}}
+.code{font-family:var(--display);font-size:clamp(72px,12vw,170px);line-height:.9;color:var(--amber);letter-spacing:.06em;font-variant-numeric:tabular-nums}
+.qr{background:var(--paper);padding:12px;border-radius:10px;width:fit-content}
+.qr img,.qr canvas{display:block;width:220px;height:220px;max-width:100%}
+.link{font-size:14px;word-break:break-all;color:var(--muted)}
+.teams{display:flex;flex-wrap:wrap;gap:10px}
+.team{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-weight:800;font-size:18px;display:flex;gap:8px;align-items:center}
+.team .dot{width:9px;height:9px;border-radius:50%;background:var(--green)}
+.team.off .dot{background:var(--muted)}
+.team .tag{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.notice{border-left:4px solid var(--amber);background:var(--panel2);padding:12px 14px;border-radius:6px;font-size:15px}
+
+/* question (TV) */
+.qbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.pill{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-weight:600;font-size:14px}
+.timer{margin-left:auto;font-family:var(--display);font-size:56px;line-height:1;color:var(--amber);font-variant-numeric:tabular-nums;min-width:2ch;text-align:right}
+.track{height:8px;background:var(--panel2);border-radius:99px;overflow:hidden}
+.track i{display:block;height:100%;background:var(--amber);width:100%;transition:width .2s linear}
+.qtext{font-size:clamp(28px,4.6vw,66px);font-weight:800;line-height:1.12;text-wrap:balance;margin:6px 0;flex:0 0 auto}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:14px;flex:1;min-height:0}
+@media (max-width:600px){.answers{grid-template-columns:1fr}}
+.ans{border-radius:12px;padding:18px 22px;display:flex;align-items:center;gap:16px;font-weight:800;font-size:clamp(20px,2.6vw,38px);line-height:1.15;border:0;text-align:left;min-height:84px;position:relative;color:#fff}
+.ans .sh{font-size:.9em;opacity:.95;flex:0 0 auto;width:1.3em;text-align:center}
+.ans.c0{background:var(--red)} .ans.c1{background:var(--blue)} .ans.c2{background:var(--yellow);color:var(--ink)} .ans.c3{background:var(--green)}
+.ans.dim{opacity:.22}
+.ans .count{margin-left:auto;font-family:var(--display);font-weight:400;font-size:1.1em;font-variant-numeric:tabular-nums}
+.ans.win{outline:5px solid var(--paper);outline-offset:3px}
+.answered{font-weight:600;color:var(--muted)}
+
+/* scoreboard */
+.board{display:flex;flex-direction:column;gap:10px;max-width:900px;width:100%;margin:0 auto}
+.brow{display:grid;grid-template-columns:3ch minmax(0,1fr) auto auto;gap:16px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;font-size:clamp(18px,2.2vw,28px);font-weight:800}
+.brow .pos{font-family:var(--display);font-weight:400;color:var(--amber);font-variant-numeric:tabular-nums}
+.brow .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.brow .gain{font-size:.62em;color:var(--green);font-weight:600;font-variant-numeric:tabular-nums}
+.brow .pts{font-variant-numeric:tabular-nums}
+.manual{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.mchip{border:1px solid var(--line);background:var(--panel2);border-radius:8px;padding:10px 14px;font-weight:700}
+.mchip[aria-pressed=true]{background:var(--green);border-color:var(--green);color:#fff}
+
+/* podium */
+.podium{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:end;max-width:1000px;width:100%;margin:0 auto}
+.pod{border:2px solid var(--amber);border-radius:6px;padding:18px 14px;text-align:center;display:flex;flex-direction:column;gap:6px;justify-content:flex-end;background:var(--panel)}
+.pod .place{font-family:var(--display);color:var(--amber);font-size:clamp(40px,6vw,80px);line-height:1}
+.pod .nm{font-weight:800;font-size:clamp(18px,2.4vw,30px);overflow-wrap:anywhere}
+.pod .pts{color:var(--muted);font-variant-numeric:tabular-nums}
+.pod.p1{min-height:300px;background:var(--amber);color:var(--ink)} .pod.p1 .place,.pod.p1 .pts{color:var(--ink)}
+.pod.p2{min-height:230px} .pod.p3{min-height:180px}
+
+/* premios */
+.prize{border:2px solid var(--amber);border-radius:6px;padding:16px 20px;max-width:900px;width:100%;margin:0 auto;display:flex;gap:16px;align-items:center;flex-wrap:wrap;
+  background:repeating-linear-gradient(135deg,transparent 0 14px,rgba(242,163,58,.07) 14px 28px)}
+.prize .big{font-family:var(--display);text-transform:uppercase;font-size:clamp(26px,3.4vw,44px);line-height:1.05;min-width:0;overflow-wrap:anywhere}
+.prize .big span{color:var(--amber)}
+.prizes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+
+/* phone player */
+.phone{max-width:560px;width:100%;margin:0 auto;flex:1;display:flex;flex-direction:column;gap:16px}
+.phead{display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:800}
+.phead .score{color:var(--amber);font-variant-numeric:tabular-nums}
+.pq{font-size:20px;font-weight:800;line-height:1.25}
+.pbtns{display:grid;grid-template-columns:1fr;gap:12px;flex:1}
+.pbtns .ans{font-size:20px;min-height:72px}
+.ptrack{height:6px;background:var(--panel2);border-radius:99px;overflow:hidden}
+.ptrack i{display:block;height:100%;background:var(--amber);width:100%;transform-origin:left;animation:drain linear forwards}
+@keyframes drain{to{transform:scaleX(0)}}
+.center{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:14px}
+.result{border-radius:16px;padding:34px 20px}
+.result.ok{background:var(--green);color:#fff}
+.result.bad{background:var(--red);color:#fff}
+.result .display{font-size:52px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="app" id="app"></div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+/* ---------- Banco de preguntas: [tema, pregunta, correcta, incorrecta, incorrecta, incorrecta] ---------- */
+const BANK = [
+ ["gen","¿Cuál es el planeta más grande del sistema solar?","Júpiter","Saturno","Neptuno","La Tierra"],
+ ["gen","¿Cuál es el océano más grande del mundo?","Pacífico","Atlántico","Índico","Ártico"],
+ ["gen","¿Quién pintó la Mona Lisa?","Leonardo da Vinci","Miguel Ángel","Rafael","Pablo Picasso"],
+ ["gen","¿Cuál es el país más grande del mundo por territorio?","Rusia","Canadá","China","Estados Unidos"],
+ ["gen","¿Cuál es el símbolo químico del oro?","Au","Ag","Or","Go"],
+ ["gen","¿Cuántos huesos tiene el cuerpo de un adulto?","206","186","212","256"],
+ ["gen","¿En qué año llegó el ser humano a la Luna?","1969","1965","1972","1959"],
+ ["gen","¿Cuál es la capital de Australia?","Canberra","Sídney","Melbourne","Perth"],
+ ["gen","¿Cuál es el animal terrestre más rápido?","Guepardo","León","Antílope","Caballo"],
+ ["gen","¿Cuántos lados tiene un hexágono?","6","5","7","8"],
+ ["gen","¿Quién escribió \"Cien años de soledad\"?","Gabriel García Márquez","Mario Vargas Llosa","Julio Cortázar","Pablo Neruda"],
+ ["gen","¿Cuál es el río más caudaloso del mundo?","Amazonas","Nilo","Misisipi","Yangtsé"],
+ ["gen","¿Qué gas absorben las plantas para hacer la fotosíntesis?","Dióxido de carbono","Oxígeno","Nitrógeno","Helio"],
+ ["gen","¿Cuántos minutos tiene un día?","1,440","1,240","1,400","1,340"],
+ ["gen","¿En qué país están las pirámides de Giza?","Egipto","México","Perú","Sudán"],
+ ["gen","¿Cuál es el órgano más grande del cuerpo humano?","La piel","El hígado","Los pulmones","El intestino"],
+ ["gen","¿Cuántos días tiene un año bisiesto?","366","365","364","360"],
+ ["gen","¿Qué metal es líquido a temperatura ambiente?","Mercurio","Plomo","Estaño","Aluminio"],
+ ["gen","¿Cuántas patas tiene una araña?","8","6","10","12"],
+ ["gen","¿Qué instrumento mide la temperatura?","Termómetro","Barómetro","Anemómetro","Higrómetro"],
+ ["gen","¿En qué idioma se escribió \"Don Quijote de la Mancha\"?","Español","Latín","Italiano","Portugués"],
+ ["gen","¿Cuántos colores tiene el arcoíris?","7","6","8","5"],
+ ["gen","¿Qué número romano representa el 50?","L","C","D","X"],
+ ["gen","¿Cuántos meses del año tienen 31 días?","7","6","5","8"],
+ ["gen","¿Cuántas horas tiene una semana?","168","148","172","144"],
+ ["gen","¿Cuántos segundos tiene una hora?","3,600","360","6,000","1,200"],
+ ["gen","¿Cuántos centímetros tiene un metro?","100","10","1,000","50"],
+ ["gen","¿Cuántos gramos tiene un kilogramo?","1,000","100","10,000","500"],
+ ["gen","¿Cuántas cartas tiene una baraja de póker sin comodines?","52","48","54","50"],
+ ["gen","¿Cuántas piezas tiene cada jugador al empezar una partida de ajedrez?","16","12","18","20"],
+ ["gen","¿Qué pieza de ajedrez solo se mueve en diagonal?","El alfil","La torre","El caballo","El rey"],
+ ["gen","¿Cuántas casillas tiene un tablero de ajedrez?","64","81","100","49"],
+ ["gen","¿Qué color sale al mezclar azul y amarillo?","Verde","Morado","Naranja","Café"],
+ ["gen","¿Qué color sale al mezclar rojo y blanco?","Rosado","Naranja","Morado","Gris"],
+ ["gen","¿Qué color sale al mezclar rojo y amarillo?","Naranja","Verde","Morado","Café"],
+ ["gen","¿Cuántos grados tiene un círculo completo?","360","180","90","400"],
+ ["gen","¿Cuánto es 7 por 8?","56","54","64","48"],
+ ["gen","¿Cuál es la raíz cuadrada de 81?","9","8","7","11"],
+ ["gen","¿Cuál es el número primo más pequeño?","2","1","3","0"],
+ ["gen","¿Cuántos años tiene un siglo?","100","10","1,000","50"],
+ ["gen","¿Cuántos años son un lustro?","5","10","4","15"],
+ ["gen","¿Cuántos años son una década?","10","5","100","20"],
+ ["gen","¿Qué día se celebra la Navidad?","25 de diciembre","24 de diciembre","31 de diciembre","6 de enero"],
+ ["gen","¿Qué se celebra el 6 de enero en muchos países?","Día de Reyes","Año Nuevo","Día del Niño","Día de la Candelaria"],
+ ["gen","¿Qué se celebra el 14 de febrero?","Día del Amor y la Amistad","Día de la Madre","Día del Trabajo","Día del Padre"],
+ ["gen","¿Qué día es el Día Internacional de los Trabajadores?","1 de mayo","15 de septiembre","1 de enero","12 de octubre"],
+ ["gen","¿Quién escribió \"Romeo y Julieta\"?","William Shakespeare","Miguel de Cervantes","Charles Dickens","Oscar Wilde"],
+ ["gen","¿Quién pintó \"La noche estrellada\"?","Vincent van Gogh","Claude Monet","Pablo Picasso","Salvador Dalí"],
+ ["gen","¿Qué pintora mexicana es famosa por sus autorretratos?","Frida Kahlo","María Izquierdo","Leonora Carrington","Remedios Varo"],
+ ["gen","¿Quién pintó el techo de la Capilla Sixtina?","Miguel Ángel","Leonardo da Vinci","Rafael","Donatello"],
+ ["gen","¿En qué ciudad está el Coliseo?","Roma","Atenas","Milán","Estambul"],
+ ["gen","¿En qué país está la Gran Muralla?","China","Japón","Mongolia","India"],
+ ["gen","¿En qué país está el Taj Mahal?","India","Pakistán","Irán","Egipto"],
+ ["gen","¿En qué ciudad está la Estatua de la Libertad?","Nueva York","Washington","Boston","Filadelfia"],
+ ["gen","¿Qué idioma tiene más hablantes nativos en el mundo?","Chino mandarín","Inglés","Español","Hindi"],
+ ["gen","¿Cuál es el idioma oficial de Brasil?","Portugués","Español","Brasileño","Francés"],
+ ["gen","¿Qué idioma se habla en Haití además del criollo?","Francés","Inglés","Español","Portugués"],
+ ["gen","¿Cuántas vocales tiene el español?","5","6","7","4"],
+ ["gen","¿Cuántas letras tiene el abecedario español?","27","26","28","29"],
+ ["gen","¿Cuál es el plural de \"lápiz\"?","Lápices","Lápizes","Lápizs","Lápiz"],
+ ["gen","¿Cuál es la unidad de la corriente eléctrica?","Amperio","Voltio","Vatio","Ohmio"],
+ ["gen","¿Cuántos ceros tiene un millón?","6","5","7","9"],
+ ["gen","¿Cuántos ceros tiene mil millones?","9","6","8","12"],
+ ["gen","¿Cómo se llama una figura de 8 lados?","Octágono","Hexágono","Pentágono","Decágono"],
+ ["gen","¿Cómo se llama una figura de 5 lados?","Pentágono","Hexágono","Cuadrilátero","Heptágono"],
+ ["gen","¿Qué forma tienen las señales de ALTO?","Octágono","Triángulo","Círculo","Rombo"],
+ ["gen","¿De qué color es en realidad la \"caja negra\" de los aviones?","Naranja","Negra","Roja","Amarilla"],
+ ["gen","¿Quién patentó el teléfono en 1876?","Alexander Graham Bell","Thomas Edison","Nikola Tesla","Guglielmo Marconi"],
+ ["gen","¿Qué se celebra el 31 de octubre en Estados Unidos?","Halloween","Acción de Gracias","Independencia","Día de San Patricio"],
+ ["gen","¿Cuántas caras tiene un dado común?","6","4","8","12"],
+ ["gen","¿Cuánto suman los puntos de las caras opuestas de un dado?","7","6","8","12"],
+ ["gen","¿Cuánto es 12 al cuadrado?","144","124","122","148"],
+ ["gen","¿Cuántos minutos hay en 3 horas?","180","120","300","150"],
+ ["gen","¿Cuántas semanas tiene un año?","52","48","50","54"],
+ ["gen","¿Cuántos días tiene febrero en un año normal?","28","29","30","27"],
+ ["gen","¿Qué estación viene después del otoño?","Invierno","Primavera","Verano","Ninguna"],
+ ["gen","¿De qué color es el círculo de la bandera de Japón?","Rojo","Blanco","Azul","Negro"],
+ ["gen","¿Qué país tiene una hoja de arce en su bandera?","Canadá","Estados Unidos","Suiza","Australia"],
+ ["gen","¿Cuántas estrellas tiene la bandera de Estados Unidos?","50","48","52","13"],
+ ["gen","¿Qué fruta, según la historia, le cayó a Newton?","Una manzana","Una pera","Una naranja","Un coco"],
+ ["gen","¿Qué escritor creó a Sherlock Holmes?","Arthur Conan Doyle","Agatha Christie","Edgar Allan Poe","Charles Dickens"],
+ ["gen","¿Qué escritora creó a Harry Potter?","J. K. Rowling","Agatha Christie","Isabel Allende","Suzanne Collins"],
+ ["gen","¿Quién escribió \"El principito\"?","Antoine de Saint-Exupéry","Julio Verne","Hans Christian Andersen","Victor Hugo"],
+ ["gen","¿A quién se le atribuye \"La Odisea\"?","Homero","Platón","Sófocles","Virgilio"],
+ ["gen","¿Qué premio se da a lo mejor del cine en Hollywood?","El Óscar","El Grammy","El Emmy","El Nobel"],
+ ["gen","¿Qué premio reconoce a lo mejor de la música?","El Grammy","El Óscar","El Emmy","El Tony"],
+ ["gen","¿Qué colombiano ganó el Nobel de Literatura en 1982?","Gabriel García Márquez","Fernando Botero","Álvaro Mutis","Jorge Isaacs"],
+ ["gen","¿Qué chilena ganó el Nobel de Literatura en 1945?","Gabriela Mistral","Isabel Allende","Violeta Parra","Marcela Paz"],
+ ["gen","¿En qué ciudad se entregan los Premios Nobel, salvo el de la Paz?","Estocolmo","Oslo","Ginebra","París"],
+ ["gen","¿Cuántos años de casados se celebran en las bodas de oro?","50","25","40","60"],
+ ["gen","¿Cuántos años de casados se celebran en las bodas de plata?","25","10","50","30"],
+ ["gen","¿Cuántas cuerdas tiene un violín?","4","5","6","3"],
+ ["gen","¿Cuántas teclas tiene un piano estándar?","88","76","92","100"],
+ ["gen","¿Qué número se considera de mala suerte en muchos países?","13","7","9","1"],
+ ["gen","¿Cuánto es la mitad de 250?","125","150","115","100"],
+ ["gen","¿Cuánto es el 10% de 500?","50","5","100","25"],
+ ["gen","¿Cuántos lados tiene un cuadrado?","4","3","5","6"],
+ ["gen","¿Qué número romano representa el 10?","X","V","L","I"],
+ ["gen","¿Qué número romano representa el 100?","C","M","D","L"],
+ ["gen","¿Cuál es el número 1,000 en números romanos?","M","C","D","K"],
+ ["gen","¿Qué signo del zodiaco es representado por un león?","Leo","Aries","Tauro","Sagitario"],
+ ["gen","¿Cuántos signos tiene el zodiaco?","12","10","13","7"],
+ ["gen","¿Qué animal es el símbolo de la paz?","La paloma blanca","El águila","El búho","El cisne"],
+ ["gen","¿Qué metal precioso es de color amarillo?","Oro","Plata","Platino","Cobre"],
+ ["gen","¿Cuántas horas tiene un día?","24","12","20","36"],
+ ["gen","¿Cuál es el resultado de 9 por 9?","81","72","99","89"],
+ ["hn","¿Cuál es la moneda de Honduras?","Lempira","Colón","Quetzal","Córdoba"],
+ ["hn","¿Cuál es el ave nacional de Honduras?","Guara roja","Quetzal","Tucán","Colibrí"],
+ ["hn","¿Cuál es el árbol nacional de Honduras?","Pino","Caoba","Ceiba","Roble"],
+ ["hn","¿Qué ciudad fue la capital de Honduras antes que Tegucigalpa?","Comayagua","Gracias","Trujillo","Santa Rosa de Copán"],
+ ["hn","¿Cuántos departamentos tiene Honduras?","18","16","20","14"],
+ ["hn","¿En qué departamento están las ruinas mayas de Copán?","Copán","Ocotepeque","Lempira","Santa Bárbara"],
+ ["hn","¿Cuál es el lago natural más grande de Honduras?","Lago de Yojoa","Lago de Caratasca","Laguna de Ticamaya","Lago de Nicaragua"],
+ ["hn","¿Cuál es el puerto más importante de Honduras en el Caribe?","Puerto Cortés","La Ceiba","Tela","Trujillo"],
+ ["hn","¿A qué pueblo indígena pertenecía el cacique Lempira?","Lenca","Maya","Garífuna","Pech"],
+ ["hn","¿Cuál de estas islas NO es parte de las Islas de la Bahía?","Ometepe","Roatán","Utila","Guanaja"],
+ ["hn","¿Qué fecha celebra Honduras su independencia?","15 de septiembre","1 de mayo","3 de octubre","12 de octubre"],
+ ["hn","¿Qué hondureño fue presidente de la República Federal de Centroamérica?","Francisco Morazán","José Cecilio del Valle","José Trinidad Cabañas","Lempira"],
+ ["hn","¿Cuál es la montaña más alta de Honduras?","Cerro Las Minas (Celaque)","Pico Bonito","Cerro de Hula","La Tigra"],
+ ["hn","Tortilla de harina con frijoles, mantequilla y queso. ¿Cómo se llama?","Baleada","Pupusa","Catracha","Enchilada"],
+ ["hn","¿Cuál es el departamento más grande de Honduras?","Gracias a Dios","Olancho","Colón","Yoro"],
+ ["hn","¿Cuál es la flor nacional de Honduras?","Orquídea","Rosa","Girasol","Clavel"],
+ ["hn","¿Qué río marca gran parte de la frontera entre Honduras y Nicaragua?","Río Coco","Río Ulúa","Río Patuca","Río Choluteca"],
+ ["hn","¿Qué ciudad es conocida como la capital industrial de Honduras?","San Pedro Sula","La Ceiba","Choluteca","Comayagua"],
+ ["hn","¿Qué ciudad es conocida como \"la novia de Honduras\"?","La Ceiba","Tela","Trujillo","Puerto Cortés"],
+ ["hn","¿En qué ciudad se celebra la Feria Juniana?","San Pedro Sula","Tegucigalpa","La Ceiba","Danlí"],
+ ["hn","¿En qué ciudad se celebra el Festival del Maíz?","Danlí","Juticalpa","Siguatepeque","Catacamas"],
+ ["hn","¿Qué pueblo afrodescendiente vive en la costa norte de Honduras?","Garífuna","Lenca","Tolupán","Pech"],
+ ["hn","¿Cómo se llama la reserva de La Mosquitia que es Patrimonio de la Humanidad?","Río Plátano","Pico Bonito","Celaque","Cuero y Salado"],
+ ["hn","Sopa garífuna de leche de coco con pescado y plátano. ¿Cómo se llama?","Tapado","Mondongo","Nacatamal","Montuca"],
+ ["hn","¿Cómo les dicen a los salvadoreños?","Guanacos","Catrachos","Chapines","Ticos"],
+ ["hn","¿Cuál es la cabecera del departamento de Olancho?","Juticalpa","Catacamas","Campamento","San Esteban"],
+ ["hn","¿Cuál es la cabecera del departamento de Atlántida?","La Ceiba","Tela","Trujillo","El Progreso"],
+ ["hn","¿Quién escribió la novela \"Prisión verde\"?","Ramón Amaya Amador","Froylán Turcios","Juan Ramón Molina","Clementina Suárez"],
+ ["hn","¿Cuántas estrellas tiene la bandera de Honduras?","5","4","6","3"],
+ ["hn","¿Quién escribió la letra del Himno Nacional de Honduras?","Augusto C. Coello","Carlos Hartling","Juan Ramón Molina","Froylán Turcios"],
+ ["hn","¿En qué año pasó el huracán Mitch por Honduras?","1998","2001","1995","2005"],
+ ["hn","¿Qué dos ciudades forman el Distrito Central?","Tegucigalpa y Comayagüela","Tegucigalpa y Valle de Ángeles","Tegucigalpa y Santa Lucía","Comayagüela y Ojojona"],
+ ["hn","¿Con qué países limita Honduras por tierra?","Guatemala, El Salvador y Nicaragua","Guatemala, Belice y Nicaragua","El Salvador, Nicaragua y Costa Rica","Guatemala, México y Nicaragua"],
+ ["hn","¿Qué golfo comparte Honduras con El Salvador y Nicaragua?","Golfo de Fonseca","Golfo de Honduras","Golfo de México","Golfo de Papagayo"],
+ ["hn","¿Qué puerto hondureño está en el Golfo de Fonseca?","San Lorenzo","Puerto Cortés","Tela","Trujillo"],
+ ["hn","¿Cuál es la isla más grande de las Islas de la Bahía?","Roatán","Utila","Guanaja","Cayos Cochinos"],
+ ["hn","¿Cuál es la cabecera del departamento de Cortés?","San Pedro Sula","Puerto Cortés","Choloma","Villanueva"],
+ ["hn","¿Cuál es la cabecera del departamento de Copán?","Santa Rosa de Copán","Copán Ruinas","La Entrada","Florida"],
+ ["hn","¿Cuál es la cabecera del departamento de Lempira?","Gracias","La Esperanza","Erandique","Lepaera"],
+ ["hn","¿Cuál es la cabecera del departamento de Intibucá?","La Esperanza","Gracias","Marcala","Jesús de Otoro"],
+ ["hn","¿Cuál es la cabecera del departamento de El Paraíso?","Yuscarán","Danlí","El Paraíso","Trojes"],
+ ["hn","¿Cuál es la cabecera del departamento de Colón?","Trujillo","Tocoa","Sonaguera","Bonito Oriental"],
+ ["hn","¿Cuál es la cabecera del departamento de Gracias a Dios?","Puerto Lempira","Brus Laguna","Ahuas","Wampusirpi"],
+ ["hn","¿Cuál es la cabecera del departamento de Yoro?","Yoro","El Progreso","Olanchito","Morazán"],
+ ["hn","¿Cuál es la cabecera del departamento de Valle?","Nacaome","San Lorenzo","Amapala","Langue"],
+ ["hn","¿Cuál es la cabecera del departamento de Ocotepeque?","Nueva Ocotepeque","Sinuapa","San Marcos","Santa Fe"],
+ ["hn","¿En qué departamento está Catacamas?","Olancho","El Paraíso","Yoro","Colón"],
+ ["hn","¿En qué departamento está Danlí?","El Paraíso","Olancho","Francisco Morazán","Choluteca"],
+ ["hn","¿En qué departamento está Siguatepeque?","Comayagua","Intibucá","La Paz","Francisco Morazán"],
+ ["hn","¿En qué departamento está Tegucigalpa?","Francisco Morazán","Comayagua","El Paraíso","La Paz"],
+ ["hn","¿En qué isla del Golfo de Fonseca está Amapala?","Isla del Tigre","Zacate Grande","Isla Exposición","Isla Conejo"],
+ ["hn","¿Cómo se llama el aeropuerto de San Pedro Sula?","Ramón Villeda Morales","Toncontín","Golosón","Juan Manuel Gálvez"],
+ ["hn","¿Cómo se llama el aeropuerto de Roatán?","Juan Manuel Gálvez","Golosón","Toncontín","Ramón Villeda Morales"],
+ ["hn","¿Cómo se llama el aeropuerto de La Ceiba?","Golosón","Toncontín","Palmerola","Ramón Villeda Morales"],
+ ["hn","¿En qué departamento está el aeropuerto de Palmerola?","Comayagua","Francisco Morazán","La Paz","Yoro"],
+ ["hn","¿Qué fruta exportó tanto Honduras que la llamaron \"república bananera\"?","Banano","Piña","Café","Mango"],
+ ["hn","¿Quién aparece en el billete de 1 lempira?","Lempira","Francisco Morazán","José Cecilio del Valle","Ramón Rosa"],
+ ["hn","¿Quién aparece en el billete de 5 lempiras?","Francisco Morazán","José Cecilio del Valle","Lempira","Dionisio de Herrera"],
+ ["hn","¿Quién aparece en el billete de 10 lempiras?","José Trinidad Cabañas","Juan Manuel Gálvez","Dionisio de Herrera","Lempira"],
+ ["hn","¿Quién aparece en el billete de 20 lempiras?","Dionisio de Herrera","José Trinidad Cabañas","Marco Aurelio Soto","Ramón Rosa"],
+ ["hn","¿Quién aparece en el billete de 50 lempiras?","Juan Manuel Gálvez","Marco Aurelio Soto","Ramón Villeda Morales","Tiburcio Carías"],
+ ["hn","¿Quién aparece en el billete de 100 lempiras?","José Cecilio del Valle","Francisco Morazán","Ramón Rosa","Dionisio de Herrera"],
+ ["hn","¿Quién aparece en el billete de 500 lempiras?","Ramón Rosa","Francisco Morazán","José Cecilio del Valle","Lempira"],
+ ["hn","¿Qué hondureño redactó el Acta de Independencia de 1821?","José Cecilio del Valle","Francisco Morazán","Dionisio de Herrera","Juan Lindo"],
+ ["hn","¿Quién fue el primer jefe de Estado de Honduras?","Dionisio de Herrera","Francisco Morazán","José Trinidad Cabañas","Juan Lindo"],
+ ["hn","¿A quién llaman \"el Sabio Valle\"?","José Cecilio del Valle","Ramón Rosa","Francisco Morazán","Juan Ramón Molina"],
+ ["hn","¿En qué ciudad nació Francisco Morazán?","Tegucigalpa","Comayagua","San Pedro Sula","Choluteca"],
+ ["hn","¿Qué poeta hondureño escribió \"Tierras, mares y cielos\"?","Juan Ramón Molina","Froylán Turcios","Rafael Heliodoro Valle","Roberto Sosa"],
+ ["hn","¿Quién escribió la novela \"Blanca Olmedo\"?","Lucila Gamero de Medina","Clementina Suárez","Argentina Díaz Lozano","Froylán Turcios"],
+ ["hn","¿Qué escritor, autor de \"El dinosaurio\", nació en Tegucigalpa?","Augusto Monterroso","Julio Cortázar","Jorge Luis Borges","Juan Rulfo"],
+ ["hn","¿Qué pintor hondureño es famoso por su arte primitivista?","José Antonio Velásquez","Pablo Zelaya Sierra","Arturo López Rodezno","Carlos Garay"],
+ ["hn","¿Qué pueblo pintó José Antonio Velásquez en muchas obras?","San Antonio de Oriente","Ojojona","Valle de Ángeles","Santa Lucía"],
+ ["hn","¿Qué pueblo cerca de Tegucigalpa es famoso por sus artesanías?","Valle de Ángeles","Nacaome","Tela","Olanchito"],
+ ["hn","¿Qué famosa cascada está cerca del Lago de Yojoa?","Pulhapanzak","Las Golondrinas","El Bejuco","Salto del Ángel"],
+ ["hn","¿Qué parque nacional está junto a La Ceiba?","Pico Bonito","Celaque","La Tigra","Cusuco"],
+ ["hn","¿Qué parque nacional protege el bosque nublado cerca de Tegucigalpa?","La Tigra","Pico Bonito","Cusuco","Celaque"],
+ ["hn","¿Qué aventura es famosa en el río Cangrejal?","Rafting","Surf","Esquí","Buceo en cuevas"],
+ ["hn","¿Qué ciudad tiene un reloj colonial considerado de los más antiguos de América?","Comayagua","Gracias","Tegucigalpa","Trujillo"],
+ ["hn","¿Qué fortaleza colonial está en Omoa?","Fortaleza de San Fernando","Castillo de San Felipe","Fortaleza de Santa Bárbara","Castillo del Morro"],
+ ["hn","¿En qué ciudad está la Fortaleza de Santa Bárbara?","Trujillo","Omoa","Gracias","Comayagua"],
+ ["hn","¿Qué día se celebra a la Virgen de Suyapa?","3 de febrero","12 de diciembre","15 de septiembre","8 de diciembre"],
+ ["hn","¿Cómo se llama la catedral de Tegucigalpa?","Catedral de San Miguel Arcángel","Catedral de la Inmaculada","Catedral de Santa María","Catedral de San Pedro"],
+ ["hn","¿Qué día se celebra el Día de Lempira?","20 de julio","15 de septiembre","3 de octubre","12 de octubre"],
+ ["hn","¿Qué se celebra el 3 de octubre en Honduras?","El natalicio de Morazán","La Independencia","El Día de la Bandera","El Día de Lempira"],
+ ["hn","¿Qué día es el Día de la Bandera en Honduras?","1 de septiembre","15 de septiembre","20 de julio","3 de octubre"],
+ ["hn","¿Qué representan las cinco estrellas de la bandera?","Los cinco países de la antigua Federación","Los cinco departamentos originales","Los cinco presidentes fundadores","Los cinco ríos principales"],
+ ["hn","¿De qué colores es la bandera de Honduras?","Azul y blanco","Rojo y blanco","Azul y amarillo","Verde y blanco"],
+ ["hn","¿Cuál es el mamífero nacional de Honduras?","Venado cola blanca","Jaguar","Tapir","Mono aullador"],
+ ["hn","¿Cómo se llama el baile garífuna más famoso?","Punta","Cumbia","Bachata","Danza del garrobo"],
+ ["hn","¿Qué instrumento de madera es típico del folklore hondureño?","Marimba","Gaita","Bandoneón","Charango"],
+ ["hn","¿Qué es una \"catracha\" en la comida hondureña?","Tortilla frita con frijoles y queso","Una sopa de res","Un pan dulce","Una bebida de maíz"],
+ ["hn","¿Qué tamal grande lleva cerdo o pollo y va en hoja de plátano?","Nacatamal","Tamalito de elote","Montuca","Pupusa"],
+ ["hn","¿Qué sopa hondureña se hace con panza de res?","Mondongo","Tapado","Sopa de caracol","Sopa de frijoles"],
+ ["hn","¿Qué bebida dulce de maíz tierno es típica de Honduras?","Atol de elote","Mate","Tepache","Kombucha"],
+ ["hn","¿Cómo se le dice al dinero en lenguaje popular hondureño?","Pisto","Guita","Pasta","Lana"],
+ ["hn","¿Qué significa \"chele\" en Honduras?","Persona de piel o pelo claro","Persona enojada","Persona muy alta","Persona tacaña"],
+ ["hn","¿Qué significa \"cipote\" en Honduras?","Niño","Anciano","Policía","Jefe"],
+ ["hn","¿Qué significa \"maje\" en Honduras?","Amigo o tipo","Dinero","Comida","Trabajo"],
+ ["hn","¿Qué quiere decir \"¡Qué macizo!\" en Honduras?","¡Qué bueno!","¡Qué caro!","¡Qué feo!","¡Qué cansado!"],
+ ["hn","¿Qué es un \"bolo\" en Honduras?","Una persona borracha","Un niño","Un bus","Un pan"],
+ ["hn","¿Qué es la \"chamba\"?","El trabajo","La comida","La fiesta","La casa"],
+ ["hn","¿Qué es una \"pulpería\"?","Una tiendita de barrio","Un mercado de pescado","Una cantina","Una farmacia"],
+ ["hn","¿Qué es un \"rapidito\" en Tegucigalpa?","Un microbús de transporte","Una mototaxi","Un restaurante de comida rápida","Un mensajero"],
+ ["hn","¿Qué río pasa por Tegucigalpa?","Río Choluteca","Río Ulúa","Río Aguán","Río Patuca"],
+ ["hn","¿Qué río atraviesa el valle de Sula?","Río Ulúa","Río Choluteca","Río Coco","Río Lempa"],
+ ["hn","¿Qué parque nacional está en la bahía de Tela?","Jeannette Kawas (Punta Sal)","Pico Bonito","La Tigra","Celaque"],
+ ["hn","¿Qué jardín botánico famoso está en Tela?","Lancetilla","Wilson","Las Lomas","Vallarta"],
+ ["hn","¿Qué gran arrecife pasa por las Islas de la Bahía?","Sistema Arrecifal Mesoamericano","Gran Barrera de Coral","Arrecife de Florida","Arrecife del Pacífico"],
+ ["hn","¿Qué pez gigante se puede ver en Utila en ciertas épocas?","Tiburón ballena","Ballena azul","Orca","Pez espada"],
+ ["hn","¿En qué departamento están las Cuevas de Talgua?","Olancho","Copán","Lempira","Yoro"],
+ ["hn","¿Cerca de qué ciudad están las Cuevas de Talgua?","Catacamas","Juticalpa","Campamento","Gualaco"],
+ ["hn","¿Qué fenómeno famoso ocurre en Yoro?","La lluvia de peces","La aurora boreal","Los géiseres","La nieve"],
+ ["hn","¿En qué ciudad está el Estadio Olímpico Metropolitano?","San Pedro Sula","Tegucigalpa","La Ceiba","Choloma"],
+ ["hn","¿Qué entrenador llevó a Honduras al Mundial de 1982?","José de la Paz \"Chelato\" Herrera","Reinaldo Rueda","Luis Fernando Suárez","Ramón Maradiaga"],
+ ["hn","¿Por qué es famosa Copán Ruinas?","Por sus estelas y escalinata jeroglífica maya","Por sus pirámides egipcias","Por un castillo colonial","Por un volcán activo"],
+ ["hn","¿Qué aves se ven en el parque Macaw Mountain de Copán?","Guaras","Pingüinos","Flamencos","Pavos reales"],
+ ["hn","¿Qué departamento se llamaba antes \"Tegucigalpa\"?","Francisco Morazán","Comayagua","Valle","La Paz"],
+ ["hn","¿Qué ciudad es la más poblada de Honduras?","Tegucigalpa","San Pedro Sula","La Ceiba","Choloma"],
+ ["hn","¿Qué producto agrícola es de los que más exporta Honduras hoy?","Café","Trigo","Uva","Manzana"],
+ ["hn","¿Cómo les dicen a los guatemaltecos?","Chapines","Guanacos","Nicas","Ticos"],
+ ["hn","¿Cómo les dicen a los costarricenses?","Ticos","Nicas","Chapines","Catrachos"],
+ ["hn","¿Cómo les dicen a los nicaragüenses?","Nicas","Ticos","Guanacos","Chapines"],
+ ["hn","¿Qué ciudad hondureña está en la frontera con El Salvador por El Amatillo?","Goascorán","Choluteca","Nacaome","Marcala"],
+ ["hn","¿En qué departamento está La Mosquitia hondureña principalmente?","Gracias a Dios","Olancho","Colón","Atlántida"],
+ ["hn","¿Cómo se llama la represa hidroeléctrica más grande de Honduras?","El Cajón","Patuca III","La Nieve","Río Lindo"],
+ ["dep","¿Qué selección ganó el Mundial de Catar 2022?","Argentina","Francia","Brasil","Croacia"],
+ ["dep","¿En qué año jugó Honduras su primer Mundial?","1982","1970","1990","2010"],
+ ["dep","La \"Guerra del Fútbol\" de 1969 fue entre Honduras y...","El Salvador","Guatemala","Nicaragua","Costa Rica"],
+ ["dep","¿Qué equipo hondureño es conocido como \"La Máquina\"?","Real España","Olimpia","Motagua","Marathón"],
+ ["dep","¿Qué equipo hondureño es conocido como \"El Ciclón Azul\"?","Motagua","Olimpia","Victoria","Real España"],
+ ["dep","¿Qué hondureño fue apodado \"La Pantera\" y jugó en Italia?","David Suazo","Wilson Palacios","Carlos Pavón","Amado Guevara"],
+ ["dep","¿Qué país organizó el Mundial 2014?","Brasil","Sudáfrica","Rusia","Alemania"],
+ ["dep","¿Cuál de estos países NO fue sede del Mundial 2026?","Costa Rica","México","Estados Unidos","Canadá"],
+ ["dep","¿Cuántos jugadores tiene en cancha un equipo de fútbol?","11","10","12","9"],
+ ["dep","¿Cuántos puntos vale un touchdown en la NFL?","6","7","3","5"],
+ ["dep","¿Con qué equipo ganó Michael Jordan sus 6 campeonatos de la NBA?","Chicago Bulls","Los Angeles Lakers","Boston Celtics","Washington Wizards"],
+ ["dep","¿En qué deporte se batea un \"home run\"?","Béisbol","Críquet","Softbol de playa","Golf"],
+ ["dep","¿Cada cuántos años se juega el Mundial de fútbol?","4","2","3","5"],
+ ["dep","¿Cuántos torneos de Grand Slam de tenis se juegan cada año?","4","3","5","6"],
+ ["dep","¿Quién es el jugador con más Balones de Oro de la historia?","Lionel Messi","Cristiano Ronaldo","Johan Cruyff","Michel Platini"],
+ ["dep","¿Cuántos minutos dura un partido de fútbol sin el tiempo agregado?","90","80","100","120"],
+ ["dep","¿Cuántos Mundiales ha jugado Honduras?","3","2","4","5"],
+ ["dep","¿Qué país ha ganado más Mundiales de fútbol?","Brasil","Alemania","Italia","Argentina"],
+ ["dep","¿En qué deporte se usa un \"puck\"?","Hockey sobre hielo","Polo","Lacrosse","Curling"],
+ ["dep","¿Cuántos anillos tiene el símbolo de los Juegos Olímpicos?","5","4","6","7"],
+ ["dep","¿Qué equipo hondureño es conocido como \"El León\" o \"Los Albos\"?","Olimpia","Motagua","Real España","Vida"],
+ ["dep","¿Qué equipo hondureño es conocido como \"El Monstruo Verde\"?","Marathón","Platense","Victoria","Olimpia"],
+ ["dep","¿Qué tenista ganó más veces Roland Garros?","Rafael Nadal","Roger Federer","Novak Djokovic","Björn Borg"],
+ ["dep","¿Cómo se llama el estadio del FC Barcelona?","Camp Nou","Santiago Bernabéu","Metropolitano","Mestalla"],
+ ["dep","¿Cuántos jugadores tiene en cancha un equipo de baloncesto?","5","6","7","4"],
+ ["dep","¿Qué país ganó la Copa América 2024?","Argentina","Colombia","Uruguay","Brasil"],
+ ["dep","¿Cuántos jugadores tiene en cancha un equipo de voleibol?","6","5","7","8"],
+ ["dep","¿Cuántos sets hay que ganar en un partido de voleibol a cinco sets?","3","2","4","5"],
+ ["dep","¿Cuántos jugadores tiene en el campo un equipo de béisbol?","9","10","11","8"],
+ ["dep","¿Cuántas entradas tiene un juego normal de béisbol de Grandes Ligas?","9","7","10","12"],
+ ["dep","¿Cuántos strikes hacen un ponche?","3","4","2","5"],
+ ["dep","¿Cuántas bolas dan base por bolas?","4","3","5","2"],
+ ["dep","¿Cuántos jugadores tiene en el campo un equipo de fútbol americano?","11","10","12","9"],
+ ["dep","¿Cuánto vale un gol de campo en la NFL?","3","2","1","6"],
+ ["dep","¿Cómo se llama la final de la NFL?","Super Bowl","Serie Mundial","Copa Stanley","Las Finales"],
+ ["dep","¿Cómo se llama la final del béisbol de Grandes Ligas?","Serie Mundial","Super Bowl","Copa Stanley","Clásico Mundial"],
+ ["dep","¿Qué trofeo gana el campeón de la NHL?","Copa Stanley","Trofeo Larry O'Brien","Trofeo Lombardi","Copa Davis"],
+ ["dep","¿Qué trofeo recibe el campeón del Super Bowl?","Trofeo Vince Lombardi","Copa Stanley","Trofeo Larry O'Brien","Copa del Comisionado"],
+ ["dep","¿Cuánto vale un tiro desde fuera de la línea de tres en baloncesto?","3","2","4","1"],
+ ["dep","¿Cuánto vale un tiro libre en baloncesto?","1","2","3","0"],
+ ["dep","¿Cuánto mide un maratón?","42.195 km","40 km","21 km","50 km"],
+ ["dep","¿Cada cuántos años son los Juegos Olímpicos de verano?","4","2","3","5"],
+ ["dep","¿Qué ciudad organizó los Juegos Olímpicos de 2024?","París","Tokio","Los Ángeles","Londres"],
+ ["dep","¿Qué ciudad organizará los Juegos Olímpicos de 2028?","Los Ángeles","Brisbane","Madrid","Roma"],
+ ["dep","¿En qué país nacieron los Juegos Olímpicos antiguos?","Grecia","Italia","Egipto","Turquía"],
+ ["dep","¿Qué atleta jamaicano tiene el récord mundial de 100 metros?","Usain Bolt","Yohan Blake","Asafa Powell","Carl Lewis"],
+ ["dep","¿Cuál es el récord mundial de Usain Bolt en 100 metros?","9.58 segundos","9.69 segundos","9.72 segundos","9.80 segundos"],
+ ["dep","¿Qué nadador ganó más medallas olímpicas de la historia?","Michael Phelps","Mark Spitz","Ryan Lochte","Ian Thorpe"],
+ ["dep","¿Cuántos hoyos tiene un campo de golf normal?","18","9","12","21"],
+ ["dep","¿En qué deporte se habla de un \"hoyo en uno\"?","Golf","Tenis","Billar","Boliche"],
+ ["dep","¿En qué deporte se hace un \"strike\" derribando todos los pinos?","Boliche","Béisbol","Billar","Croquet"],
+ ["dep","¿Cuántos pinos hay en el boliche?","10","9","12","8"],
+ ["dep","¿Qué tenista suizo ganó 20 títulos de Grand Slam?","Roger Federer","Stan Wawrinka","Martina Hingis","Marc Rosset"],
+ ["dep","¿Qué tenista tiene más títulos de Grand Slam en hombres?","Novak Djokovic","Rafael Nadal","Roger Federer","Pete Sampras"],
+ ["dep","¿Sobre qué superficie se juega Wimbledon?","Césped","Arcilla","Cemento","Madera"],
+ ["dep","¿Sobre qué superficie se juega Roland Garros?","Arcilla","Césped","Cemento","Madera"],
+ ["dep","¿Cómo se llama en tenis un saque que el rival no logra tocar?","Ace","Let","Smash","Volea"],
+ ["dep","¿Qué selección ganó el Mundial de 2018?","Francia","Croacia","Bélgica","Alemania"],
+ ["dep","¿Qué selección ganó el Mundial de 2014?","Alemania","Argentina","Brasil","Países Bajos"],
+ ["dep","¿Qué selección ganó el Mundial de 2010?","España","Países Bajos","Alemania","Uruguay"],
+ ["dep","¿En qué país se jugó el Mundial de 2010?","Sudáfrica","Brasil","Alemania","Japón"],
+ ["dep","¿Qué país ganó el primer Mundial, en 1930?","Uruguay","Argentina","Brasil","Italia"],
+ ["dep","¿Cuántas selecciones jugaron el Mundial 2026?","48","32","40","36"],
+ ["dep","¿Qué jugador es conocido como \"La Pulga\"?","Lionel Messi","Neymar","Luis Suárez","Sergio Agüero"],
+ ["dep","¿Qué jugador es conocido como \"CR7\"?","Cristiano Ronaldo","Ricardo Quaresma","Luís Figo","Bruno Fernandes"],
+ ["dep","¿Qué jugador brasileño era conocido como \"O Rei\"?","Pelé","Ronaldinho","Romário","Zico"],
+ ["dep","¿Quién anotó el gol de \"la mano de Dios\" en 1986?","Diego Maradona","Pelé","Mario Kempes","Gabriel Batistuta"],
+ ["dep","¿Qué club es conocido como \"Los Merengues\"?","Real Madrid","Barcelona","Atlético de Madrid","Valencia"],
+ ["dep","¿Qué club ha ganado más veces la Champions League?","Real Madrid","AC Milan","Bayern Múnich","Liverpool"],
+ ["dep","¿En qué país juega el Manchester United?","Inglaterra","Escocia","Gales","Irlanda"],
+ ["dep","¿En qué ciudad juega la Juventus?","Turín","Milán","Roma","Nápoles"],
+ ["dep","¿En qué ciudad juega el Bayern?","Múnich","Berlín","Dortmund","Hamburgo"],
+ ["dep","¿Qué equipos juegan el Superclásico argentino?","Boca Juniors y River Plate","Racing e Independiente","San Lorenzo y Huracán","Rosario Central y Newell's"],
+ ["dep","¿Qué equipos juegan el clásico capitalino de Honduras?","Olimpia y Motagua","Olimpia y Marathón","Motagua y Real España","Marathón y Real España"],
+ ["dep","¿Qué equipos juegan el clásico sampedrano?","Marathón y Real España","Olimpia y Motagua","Platense y Vida","Victoria y Vida"],
+ ["dep","¿De qué ciudad es el club Vida?","La Ceiba","Tela","Puerto Cortés","Choluteca"],
+ ["dep","¿De qué ciudad es el club Platense?","Puerto Cortés","La Ceiba","Tela","San Pedro Sula"],
+ ["dep","¿Qué club tiene más títulos de liga en Honduras?","Olimpia","Motagua","Real España","Marathón"],
+ ["dep","¿Qué mediocampista hondureño jugó en el Wigan y el Tottenham?","Wilson Palacios","Maynor Figueroa","Emilio Izaguirre","Hendry Thomas"],
+ ["dep","¿Qué defensa hondureño fue figura del Celtic de Escocia?","Emilio Izaguirre","Maynor Figueroa","Víctor Bernárdez","Brayan Beckeles"],
+ ["dep","¿En qué deporte compite LeBron James?","Baloncesto","Fútbol americano","Béisbol","Tenis"],
+ ["dep","¿Qué boxeador mexicano es conocido como \"Canelo\"?","Saúl Álvarez","Julio César Chávez","Juan Manuel Márquez","Érik Morales"],
+ ["dep","¿Qué boxeador es conocido como \"Iron Mike\"?","Mike Tyson","Muhammad Ali","Floyd Mayweather","George Foreman"],
+ ["dep","¿Qué boxeador decía que flotaba como mariposa y picaba como abeja?","Muhammad Ali","Mike Tyson","Joe Frazier","Rocky Marciano"],
+ ["dep","¿Cuántos asaltos tiene como máximo una pelea de campeonato hoy?","12","15","10","8"],
+ ["dep","¿En qué deporte se corre el Tour de Francia?","Ciclismo","Atletismo","Automovilismo","Natación"],
+ ["dep","¿Qué piloto británico tiene 7 campeonatos de Fórmula 1?","Lewis Hamilton","Jenson Button","Nigel Mansell","Lando Norris"],
+ ["dep","¿De qué país era Ayrton Senna?","Brasil","Argentina","Italia","Portugal"],
+ ["dep","¿Qué piloto mexicano corrió para Red Bull en Fórmula 1?","Checo Pérez","Esteban Gutiérrez","Pato O'Ward","Memo Rojas"],
+ ["dep","¿Cuántos jugadores por equipo hay en la pista en el hockey sobre hielo?","6","5","7","11"],
+ ["dep","¿En qué país se inventó el baloncesto?","Estados Unidos","Canadá","Inglaterra","Francia"],
+ ["dep","¿Qué es un \"hat-trick\" en el fútbol?","Tres goles de un jugador en un partido","Un gol de chilena","Un gol de cabeza","Un autogol"],
+ ["dep","¿Qué es un \"gol olímpico\"?","Un gol directo de tiro de esquina","Un gol desde medio campo","Un gol de chilena","Un gol en los Olímpicos"],
+ ["dep","¿A cuántos metros de la portería se cobra un penal?","11 metros","9 metros","12 metros","16 metros"],
+ ["dep","¿Cuántas tarjetas amarillas en un partido equivalen a una expulsión?","2","3","1","4"],
+ ["dep","¿Cuántos cambios puede hacer un equipo en un partido oficial hoy?","5","3","4","6"],
+ ["dep","¿Cómo le dicen a la selección de Honduras?","La H","La Sele","La Celeste","La Roja"],
+ ["dep","¿Cómo le dicen a la selección de Argentina?","La Albiceleste","La Roja","La Canarinha","La Celeste"],
+ ["dep","¿Cómo le dicen a la selección de Brasil?","La Canarinha","La Albiceleste","La Celeste","La Furia Roja"],
+ ["dep","¿Cómo le dicen a la selección de Uruguay?","La Celeste","La Albiceleste","La Roja","El Tri"],
+ ["dep","¿Cómo le dicen a la selección de México?","El Tri","La Celeste","La Roja","La H"],
+ ["dep","¿Cuántos jugadores tiene un equipo de fútbol sala en cancha?","5","6","7","4"],
+ ["dep","¿Qué deporte se juega con raqueta y volante (pluma)?","Bádminton","Tenis de mesa","Squash","Pádel"],
+ ["dep","¿Cuánto dura un partido de baloncesto de la NBA sin prórroga?","48 minutos","40 minutos","60 minutos","90 minutos"],
+ ["dep","¿Cuántos cuartos tiene un partido de baloncesto?","4","2","3","5"],
+ ["dep","¿Qué equipo de la NBA es de Los Ángeles y viste de morado y oro?","Lakers","Clippers","Warriors","Suns"],
+ ["dep","¿En qué deporte destacó Tiger Woods?","Golf","Tenis","Béisbol","Baloncesto"],
+ ["dep","¿En qué deporte destacó Serena Williams?","Tenis","Atletismo","Golf","Voleibol"],
+ ["dep","¿En qué deporte es famoso Shohei Ohtani?","Béisbol","Sumo","Fútbol","Baloncesto"],
+ ["dep","¿Qué selección ganó la Eurocopa 2024?","España","Inglaterra","Francia","Italia"],
+ ["dep","¿Qué jugador ganó el Balón de Oro 2023?","Lionel Messi","Erling Haaland","Kylian Mbappé","Vinícius Júnior"],
+ ["mus","¿Quién canta \"Despacito\" junto a Daddy Yankee?","Luis Fonsi","Ricky Martin","Nicky Jam","J Balvin"],
+ ["mus","¿Qué banda grabó \"Bohemian Rhapsody\"?","Queen","The Beatles","Led Zeppelin","The Rolling Stones"],
+ ["mus","¿Cuántos integrantes tenían The Beatles?","4","5","3","6"],
+ ["mus","¿Qué película de 1997 tiene un barco que choca con un iceberg?","Titanic","Poseidón","Tiburón","Waterworld"],
+ ["mus","¿De qué país es Shakira?","Colombia","Venezuela","México","Argentina"],
+ ["mus","¿Quién es conocido como \"el Rey del Pop\"?","Michael Jackson","Elvis Presley","Prince","Freddie Mercury"],
+ ["mus","¿Qué artista lanzó el álbum \"Un Verano Sin Ti\"?","Bad Bunny","Ozuna","Anuel AA","Rauw Alejandro"],
+ ["mus","¿Qué grupo hondureño hizo famosa la \"Sopa de caracol\"?","Banda Blanca","Los Bukis","Grupo Bryndis","Los Tigres del Norte"],
+ ["mus","¿Cómo se llama la escuela de magia de Harry Potter?","Hogwarts","Narnia","Rivendel","Gotham"],
+ ["mus","¿Qué género musical nació en Jamaica?","Reggae","Salsa","Cumbia","Merengue"],
+ ["mus","¿Quién dirigió \"Titanic\" y \"Avatar\"?","James Cameron","Steven Spielberg","Christopher Nolan","George Lucas"],
+ ["mus","¿A qué cantante llamaban \"la Reina del Tex-Mex\"?","Selena","Gloria Trevi","Thalía","Paulina Rubio"],
+ ["mus","¿Cuántas cuerdas tiene una guitarra normal?","6","5","7","8"],
+ ["mus","¿Cómo se llama el villano de \"El Rey León\"?","Scar","Jafar","Hades","Úrsula"],
+ ["mus","¿De qué país es el grupo ABBA?","Suecia","Noruega","Inglaterra","Alemania"],
+ ["mus","¿Qué cantante es conocido como \"El Sol de México\"?","Luis Miguel","Vicente Fernández","Juan Gabriel","Alejandro Fernández"],
+ ["mus","¿Quién canta \"La Bicicleta\" con Shakira?","Carlos Vives","Maluma","Juanes","Prince Royce"],
+ ["mus","¿En qué película aparecen Woody y Buzz Lightyear?","Toy Story","Shrek","Cars","Up"],
+ ["mus","¿Qué actor interpretó al capitán Jack Sparrow?","Johnny Depp","Orlando Bloom","Brad Pitt","Leonardo DiCaprio"],
+ ["mus","¿Qué banda mexicana canta \"Labios compartidos\"?","Maná","Café Tacvba","Los Temerarios","Jaguares"],
+ ["mus","¿De qué ciudad colombiana es J Balvin?","Medellín","Bogotá","Cali","Barranquilla"],
+ ["mus","¿En qué saga se dice \"Que la Fuerza te acompañe\"?","Star Wars","Star Trek","Harry Potter","Matrix"],
+ ["mus","¿Con quién canta Karol G la canción \"Tusa\"?","Nicki Minaj","Becky G","Anitta","Cardi B"],
+ ["mus","¿Qué superhéroe es Peter Parker?","Spider-Man","Batman","Superman","Iron Man"],
+ ["mus","¿Cuál es el nombre real de Daddy Yankee?","Ramón Ayala","Raúl Ocasio","Juan Luis Morera","Benito Martínez"],
+ ["mus","¿Qué banda británica tenía a John Lennon y Paul McCartney?","The Beatles","The Rolling Stones","Queen","The Who"],
+ ["mus","¿Quién era el vocalista de Queen?","Freddie Mercury","Brian May","Mick Jagger","Elton John"],
+ ["mus","¿Quién es el vocalista de The Rolling Stones?","Mick Jagger","Keith Richards","Bono","Sting"],
+ ["mus","¿Quién es el vocalista de U2?","Bono","The Edge","Sting","Chris Martin"],
+ ["mus","¿Quién es el vocalista de Coldplay?","Chris Martin","Adam Levine","Brandon Flowers","Bono"],
+ ["mus","¿Quién es el vocalista de Maroon 5?","Adam Levine","Chris Martin","Bruno Mars","Justin Timberlake"],
+ ["mus","¿Quién canta \"Thriller\"?","Michael Jackson","Prince","Lionel Richie","Stevie Wonder"],
+ ["mus","¿Quién canta \"Shape of You\"?","Ed Sheeran","Justin Bieber","Harry Styles","Shawn Mendes"],
+ ["mus","¿Quién canta \"Uptown Funk\" junto a Mark Ronson?","Bruno Mars","Pharrell Williams","Justin Timberlake","Usher"],
+ ["mus","¿Quién canta \"Rolling in the Deep\"?","Adele","Amy Winehouse","Duffy","Sia"],
+ ["mus","¿Quién canta \"Bad Romance\"?","Lady Gaga","Katy Perry","Rihanna","Beyoncé"],
+ ["mus","¿Qué cantante es conocida como \"Queen B\"?","Beyoncé","Rihanna","Britney Spears","Madonna"],
+ ["mus","¿Qué cantante es conocida como \"la Reina del Pop\"?","Madonna","Britney Spears","Lady Gaga","Cher"],
+ ["mus","¿Qué cantante cubana es conocida como \"la Reina de la Salsa\"?","Celia Cruz","Gloria Estefan","La Lupe","Olga Tañón"],
+ ["mus","¿En qué país nació Gloria Estefan?","Cuba","Puerto Rico","Estados Unidos","República Dominicana"],
+ ["mus","¿De qué país es Juan Luis Guerra?","República Dominicana","Cuba","Puerto Rico","Panamá"],
+ ["mus","¿De qué país es Rubén Blades?","Panamá","Puerto Rico","Cuba","Colombia"],
+ ["mus","¿De qué país es Bad Bunny?","Puerto Rico","República Dominicana","Colombia","Panamá"],
+ ["mus","¿De qué país es Karol G?","Colombia","Venezuela","México","Puerto Rico"],
+ ["mus","¿De qué país es Maluma?","Colombia","Venezuela","Panamá","España"],
+ ["mus","¿De qué país es Rosalía?","España","México","Argentina","Colombia"],
+ ["mus","¿De qué grupo salió Romeo Santos?","Aventura","Xtreme","Grupo Extra","Monchy & Alexandra"],
+ ["mus","¿Qué género musical hizo famoso a Aventura?","Bachata","Merengue","Salsa","Reguetón"],
+ ["mus","¿Qué género, junto a la bachata, es típico de República Dominicana?","Merengue","Tango","Cumbia","Ranchera"],
+ ["mus","¿De qué país es originaria la samba?","Brasil","Cuba","Argentina","Portugal"],
+ ["mus","¿De qué país es la música de mariachi?","México","España","Colombia","Guatemala"],
+ ["mus","¿De qué país es originaria la cumbia?","Colombia","México","Perú","Panamá"],
+ ["mus","¿Qué cantante mexicano era conocido como \"El Divo de Juárez\"?","Juan Gabriel","José José","Vicente Fernández","Marco Antonio Solís"],
+ ["mus","¿A quién llamaban \"El Príncipe de la Canción\"?","José José","Luis Miguel","Juan Gabriel","Raphael"],
+ ["mus","¿A quién llaman \"El Buki\"?","Marco Antonio Solís","Joan Sebastian","Pepe Aguilar","Vicente Fernández"],
+ ["mus","¿A quién llamaban \"El Charro de Huentitán\"?","Vicente Fernández","Antonio Aguilar","Pedro Infante","Jorge Negrete"],
+ ["mus","¿De qué país es la banda Soda Stereo?","Argentina","Chile","México","España"],
+ ["mus","¿Quién era el vocalista de Soda Stereo?","Gustavo Cerati","Charly García","Fito Páez","Andrés Calamaro"],
+ ["mus","¿Qué cantante español canta \"Corazón partío\"?","Alejandro Sanz","David Bisbal","Enrique Iglesias","Pablo Alborán"],
+ ["mus","¿Quién es el padre de Enrique Iglesias?","Julio Iglesias","Raphael","Camilo Sesto","Plácido Domingo"],
+ ["mus","¿Qué cantante puertorriqueño canta \"Livin' la vida loca\"?","Ricky Martin","Chayanne","Marc Anthony","Luis Fonsi"],
+ ["mus","¿De qué grupo juvenil salió Ricky Martin?","Menudo","Los Chicos","Magneto","Proyecto Uno"],
+ ["mus","¿Qué cantante es conocido como \"el Rey del Rock and Roll\"?","Elvis Presley","Chuck Berry","Little Richard","Jerry Lee Lewis"],
+ ["mus","¿Qué rapero se llama Marshall Mathers?","Eminem","50 Cent","Dr. Dre","Snoop Dogg"],
+ ["mus","¿Quién canta \"Blinding Lights\"?","The Weeknd","Drake","Post Malone","Bruno Mars"],
+ ["mus","¿Qué cantante hizo la gira \"The Eras Tour\"?","Taylor Swift","Beyoncé","Dua Lipa","Olivia Rodrigo"],
+ ["mus","¿Qué banda grabó \"Hotel California\"?","Eagles","Fleetwood Mac","Journey","Toto"],
+ ["mus","¿Qué banda grabó \"Sweet Child O' Mine\"?","Guns N' Roses","Bon Jovi","Aerosmith","Metallica"],
+ ["mus","¿Qué banda grabó \"Smells Like Teen Spirit\"?","Nirvana","Pearl Jam","Foo Fighters","Soundgarden"],
+ ["mus","¿Qué grupo cantó \"Dancing Queen\"?","ABBA","Roxette","Bee Gees","Boney M."],
+ ["mus","¿Cómo se apellidaban los hermanos de los Bee Gees?","Gibb","Jackson","Jonas","Osmond"],
+ ["mus","¿Quién cantaba de niño en los Jackson 5?","Michael Jackson","Prince","Stevie Wonder","Usher"],
+ ["mus","¿Quién compuso \"Las cuatro estaciones\"?","Antonio Vivaldi","Mozart","Bach","Beethoven"],
+ ["mus","¿Qué compositor se quedó sordo y siguió componiendo?","Beethoven","Mozart","Chopin","Vivaldi"],
+ ["mus","¿Qué película tiene a un ogro verde como protagonista?","Shrek","Hulk","Monsters Inc.","Mi villano favorito"],
+ ["mus","¿Cómo se llaman los ayudantes amarillos de \"Mi villano favorito\"?","Minions","Pitufos","Gremlins","Ewoks"],
+ ["mus","¿En qué película de Disney aparece \"Hakuna Matata\"?","El Rey León","Aladdín","Tarzán","Mulán"],
+ ["mus","¿Qué película de Pixar trata del Día de Muertos en México?","Coco","Encanto","Luca","Up"],
+ ["mus","¿En qué país se ambienta \"Encanto\" de Disney?","Colombia","México","Perú","Cuba"],
+ ["mus","¿Cómo se llama la princesa de \"Frozen\" con poderes de hielo?","Elsa","Anna","Aurora","Ariel"],
+ ["mus","¿Cómo se llama el muñeco de nieve de \"Frozen\"?","Olaf","Sven","Kristoff","Hans"],
+ ["mus","¿Qué actor interpretó a Iron Man en Marvel?","Robert Downey Jr.","Chris Evans","Chris Hemsworth","Mark Ruffalo"],
+ ["mus","¿Qué superhéroe usa un escudo con una estrella?","Capitán América","Thor","Superman","Flash"],
+ ["mus","¿Cuál es el nombre real de Batman?","Bruce Wayne","Clark Kent","Tony Stark","Peter Parker"],
+ ["mus","¿Cuál es el nombre real de Superman?","Clark Kent","Bruce Wayne","Steve Rogers","Barry Allen"],
+ ["mus","¿De qué planeta viene Superman?","Krypton","Marte","Asgard","Vulcano"],
+ ["mus","¿Qué villano de Star Wars le revela a Luke que es su padre?","Darth Vader","Emperador Palpatine","Kylo Ren","Darth Maul"],
+ ["mus","¿Qué película de 1975 tiene a un tiburón que aterroriza una playa?","Tiburón","Orca","Mar abierto","Megalodón"],
+ ["mus","¿Quién dirigió \"Jurassic Park\"?","Steven Spielberg","James Cameron","George Lucas","Ridley Scott"],
+ ["mus","¿En qué película viajan en el tiempo en un DeLorean?","Volver al futuro","Terminator","Matrix","Interestelar"],
+ ["mus","¿Qué actor protagonizó \"Forrest Gump\"?","Tom Hanks","Tom Cruise","Kevin Costner","Robin Williams"],
+ ["mus","¿Qué actor protagonizó \"Rocky\"?","Sylvester Stallone","Arnold Schwarzenegger","Bruce Willis","Jean-Claude Van Damme"],
+ ["mus","¿Qué actor interpretó a Terminator?","Arnold Schwarzenegger","Sylvester Stallone","Bruce Willis","Dwayne Johnson"],
+ ["mus","¿En qué serie un profesor de química se vuelve narcotraficante?","Breaking Bad","Narcos","Ozark","El Patrón del Mal"],
+ ["mus","¿Qué serie trata del robo a la Fábrica de Moneda de España?","La casa de papel","Élite","Narcos","Vis a vis"],
+ ["mus","¿Qué programa tenía al Chavo, Quico y Don Ramón?","El Chavo del 8","El Chapulín Colorado","La familia P. Luche","Cero en conducta"],
+ ["mus","¿Quién creó y actuó como El Chavo del 8?","Roberto Gómez Bolaños","Carlos Villagrán","Ramón Valdés","Rubén Aguirre"],
+ ["mus","¿Qué familia amarilla tiene una serie animada famosa?","Los Simpson","Los Picapiedra","Los Supersónicos","Padre de familia"],
+ ["mus","¿Cómo se llama el papá de Los Simpson?","Homero","Bart","Ned","Moe"],
+ ["mus","¿Qué actriz protagonizó \"Marimar\" y \"María la del Barrio\"?","Thalía","Lucero","Verónica Castro","Angélica Rivera"],
+ ["mus","¿Qué telenovela colombiana trata de una secretaria fea y muy inteligente?","Yo soy Betty, la fea","Café con aroma de mujer","Pedro el escamoso","Pasión de gavilanes"],
+ ["mus","¿En qué saga aparece el capitán Barbossa?","Piratas del Caribe","Peter Pan","Hook","La isla del tesoro"],
+ ["mus","¿En qué saga aparecen Frodo y el Anillo Único?","El Señor de los Anillos","Harry Potter","Las Crónicas de Narnia","Juego de Tronos"],
+ ["mus","¿Qué serie tiene dragones y el Trono de Hierro?","Juego de Tronos","Vikingos","The Witcher","Outlander"],
+ ["mus","¿Qué película animada trata de un pez payaso perdido?","Buscando a Nemo","La Sirenita","Tiburón","El espantatiburones"],
+ ["mus","¿Qué grupo de K-pop tiene a Jungkook y RM?","BTS","BLACKPINK","EXO","Big Bang"],
+ ["mus","¿Qué cantante colombiano canta \"Mi gente\"?","J Balvin","Maluma","Sebastián Yatra","Camilo"],
+ ["mus","¿Qué cantante canta \"Hips Don't Lie\"?","Shakira","Jennifer Lopez","Beyoncé","Thalía"],
+ ["mus","¿Qué rapero canta \"Gasolina\"?","Daddy Yankee","Don Omar","Wisin","Tego Calderón"],
+ ["mus","¿Quién canta \"Danza Kuduro\"?","Don Omar","Pitbull","Daddy Yankee","Nicky Jam"],
+ ["mus","¿Qué cantante cubano-estadounidense es conocido como \"Mr. Worldwide\"?","Pitbull","Flo Rida","Enrique Iglesias","Marc Anthony"],
+ ["mus","¿Qué película animada tiene a un ratón que cocina en París?","Ratatouille","Stuart Little","Bernardo y Bianca","Fievel"],
+ ["mus","¿Qué saga de autos y carreras protagoniza Vin Diesel?","Rápidos y furiosos","Transformers","Cars","Need for Speed"],
+ ["mus","¿Qué actor interpreta a Jack en \"Titanic\"?","Leonardo DiCaprio","Brad Pitt","Matt Damon","Johnny Depp"],
+ ["geo","¿Cuál es la capital de Canadá?","Ottawa","Toronto","Vancouver","Montreal"],
+ ["geo","¿Cuál es la capital de Brasil?","Brasilia","Río de Janeiro","São Paulo","Salvador"],
+ ["geo","¿Qué país tiene forma de bota?","Italia","Grecia","Portugal","Chile"],
+ ["geo","¿Cuál es la montaña más alta del mundo?","Everest","K2","Aconcagua","Kilimanjaro"],
+ ["geo","¿Cuál es el desierto cálido más grande del mundo?","Sahara","Gobi","Atacama","Kalahari"],
+ ["geo","¿Cuál es el país más poblado del mundo?","India","China","Estados Unidos","Indonesia"],
+ ["geo","¿Qué canal une el océano Atlántico con el Pacífico en América?","Canal de Panamá","Canal de Suez","Canal de Nicaragua","Canal de la Mancha"],
+ ["geo","¿Cuál es la capital de Japón?","Tokio","Osaka","Kioto","Seúl"],
+ ["geo","¿En qué continente está Egipto?","África","Asia","Europa","Oceanía"],
+ ["geo","¿Qué país tiene más hablantes de español?","México","España","Colombia","Argentina"],
+ ["geo","¿Cuál es la capital de Costa Rica?","San José","Alajuela","Cartago","Liberia"],
+ ["geo","¿Cuál es el río más largo de Europa?","Volga","Danubio","Rin","Sena"],
+ ["geo","¿Cuántos países forman Centroamérica?","7","6","5","8"],
+ ["geo","¿En qué ciudad está la Torre Eiffel?","París","Londres","Roma","Madrid"],
+ ["geo","¿Cuál es la capital de Argentina?","Buenos Aires","Córdoba","Rosario","Mendoza"],
+ ["geo","¿Cuál es la capital de Francia?","París","Lyon","Marsella","Niza"],
+ ["geo","¿Cuál es la capital de Alemania?","Berlín","Múnich","Fráncfort","Hamburgo"],
+ ["geo","¿Cuál es la capital de España?","Madrid","Barcelona","Sevilla","Valencia"],
+ ["geo","¿Cuál es la capital de Italia?","Roma","Milán","Venecia","Florencia"],
+ ["geo","¿Cuál es la capital de Portugal?","Lisboa","Oporto","Faro","Coímbra"],
+ ["geo","¿Cuál es la capital del Reino Unido?","Londres","Mánchester","Liverpool","Edimburgo"],
+ ["geo","¿Cuál es la capital de Rusia?","Moscú","San Petersburgo","Kiev","Minsk"],
+ ["geo","¿Cuál es la capital de China?","Pekín","Shanghái","Hong Kong","Cantón"],
+ ["geo","¿Cuál es la capital de Corea del Sur?","Seúl","Busan","Pionyang","Incheon"],
+ ["geo","¿Cuál es la capital de la India?","Nueva Delhi","Bombay","Calcuta","Bangalore"],
+ ["geo","¿Cuál es la capital de Egipto?","El Cairo","Alejandría","Luxor","Giza"],
+ ["geo","¿Cuál es la capital de Perú?","Lima","Cuzco","Arequipa","Trujillo"],
+ ["geo","¿Cuál es la capital de Chile?","Santiago","Valparaíso","Concepción","Antofagasta"],
+ ["geo","¿Cuál es la capital de Colombia?","Bogotá","Medellín","Cali","Cartagena"],
+ ["geo","¿Cuál es la capital de Venezuela?","Caracas","Maracaibo","Valencia","Mérida"],
+ ["geo","¿Cuál es la capital de Ecuador?","Quito","Guayaquil","Cuenca","Manta"],
+ ["geo","¿Cuál es la capital de Paraguay?","Asunción","Ciudad del Este","Encarnación","Luque"],
+ ["geo","¿Cuál es la capital de Uruguay?","Montevideo","Punta del Este","Colonia","Salto"],
+ ["geo","¿Cuál es la capital de Cuba?","La Habana","Santiago de Cuba","Varadero","Camagüey"],
+ ["geo","¿Cuál es la capital de República Dominicana?","Santo Domingo","Santiago","Punta Cana","La Romana"],
+ ["geo","¿Cuál es la capital de Puerto Rico?","San Juan","Ponce","Bayamón","Mayagüez"],
+ ["geo","¿Cuál es la capital de Nicaragua?","Managua","León","Granada","Masaya"],
+ ["geo","¿Cuál es la capital de El Salvador?","San Salvador","Santa Ana","San Miguel","La Libertad"],
+ ["geo","¿Cuál es la capital de Belice?","Belmopán","Ciudad de Belice","San Ignacio","Orange Walk"],
+ ["geo","¿Cuál es la capital de Estados Unidos?","Washington D. C.","Nueva York","Los Ángeles","Chicago"],
+ ["geo","¿Cuál es la capital de Turquía?","Ankara","Estambul","Esmirna","Antalya"],
+ ["geo","¿Cuál es la capital de Marruecos?","Rabat","Casablanca","Marrakech","Fez"],
+ ["geo","¿Cuál es la capital de Nigeria?","Abuja","Lagos","Kano","Ibadán"],
+ ["geo","¿Cuál es la capital de Kenia?","Nairobi","Mombasa","Kisumu","Nakuru"],
+ ["geo","¿Cuál es la capital de Grecia?","Atenas","Tesalónica","Esparta","Creta"],
+ ["geo","¿Cuál es la capital de los Países Bajos?","Ámsterdam","Róterdam","La Haya","Utrecht"],
+ ["geo","¿Cuál es la capital de Bélgica?","Bruselas","Amberes","Brujas","Gante"],
+ ["geo","¿Cuál es la capital de Suiza?","Berna","Zúrich","Ginebra","Basilea"],
+ ["geo","¿Cuál es la capital de Austria?","Viena","Salzburgo","Innsbruck","Graz"],
+ ["geo","¿Cuál es la capital de Suecia?","Estocolmo","Gotemburgo","Malmö","Upsala"],
+ ["geo","¿Cuál es la capital de Noruega?","Oslo","Bergen","Estocolmo","Copenhague"],
+ ["geo","¿Cuál es la capital de Irlanda?","Dublín","Belfast","Cork","Galway"],
+ ["geo","¿Cuál es la capital de Polonia?","Varsovia","Cracovia","Gdansk","Praga"],
+ ["geo","¿Cuál es la capital de Tailandia?","Bangkok","Phuket","Chiang Mai","Pattaya"],
+ ["geo","¿Cuál es la capital de Vietnam?","Hanói","Ciudad Ho Chi Minh","Da Nang","Hue"],
+ ["geo","¿Cuál es la capital de Filipinas?","Manila","Cebú","Davao","Quezón"],
+ ["geo","¿Cuál es la capital de Indonesia?","Yakarta","Bali","Surabaya","Bandung"],
+ ["geo","¿Cuál es la capital de Arabia Saudita?","Riad","La Meca","Yeda","Dubái"],
+ ["geo","¿Cuál es la capital de Nueva Zelanda?","Wellington","Auckland","Christchurch","Sídney"],
+ ["geo","¿Cuál es la capital de Jamaica?","Kingston","Montego Bay","Ocho Ríos","Negril"],
+ ["geo","¿Cuál es la capital de Panamá?","Ciudad de Panamá","Colón","David","Bocas del Toro"],
+ ["geo","¿Cuál es la capital de México?","Ciudad de México","Guadalajara","Monterrey","Cancún"],
+ ["geo","¿Qué océano separa América de Europa?","Atlántico","Pacífico","Índico","Ártico"],
+ ["geo","¿Cuál es el país más grande de Sudamérica?","Brasil","Argentina","Perú","Colombia"],
+ ["geo","¿Cuál es el país más pequeño del mundo?","Ciudad del Vaticano","Mónaco","San Marino","Malta"],
+ ["geo","¿En qué país está Machu Picchu?","Perú","Bolivia","Ecuador","México"],
+ ["geo","¿En qué país está la Torre de Pisa?","Italia","Francia","España","Grecia"],
+ ["geo","¿En qué país está Chichén Itzá?","México","Guatemala","Honduras","Belice"],
+ ["geo","¿En qué país está el Cristo Redentor del Corcovado?","Brasil","Argentina","Portugal","Colombia"],
+ ["geo","¿En qué país está la Ópera de Sídney?","Australia","Nueva Zelanda","Reino Unido","Canadá"],
+ ["geo","¿Entre qué países está el lago Titicaca?","Perú y Bolivia","Chile y Argentina","Ecuador y Perú","Bolivia y Paraguay"],
+ ["geo","¿Qué cordillera recorre el oeste de Sudamérica?","Los Andes","Los Alpes","Las Rocosas","Los Pirineos"],
+ ["geo","¿Cuál es el continente más grande?","Asia","África","América","Europa"],
+ ["geo","¿Cuál es el continente más frío?","Antártida","Europa","Asia","Oceanía"],
+ ["geo","¿Qué país limita con México y también con Honduras?","Guatemala","Belice","El Salvador","Nicaragua"],
+ ["geo","¿Qué país centroamericano no tiene costa en el Caribe?","El Salvador","Honduras","Guatemala","Nicaragua"],
+ ["geo","¿Cuál es el país más grande de Centroamérica?","Nicaragua","Honduras","Guatemala","Panamá"],
+ ["geo","¿En qué país centroamericano el idioma oficial es el inglés?","Belice","Panamá","Costa Rica","Guatemala"],
+ ["geo","¿Cuál es el estado más grande de Estados Unidos?","Alaska","Texas","California","Montana"],
+ ["geo","¿En qué estado de Estados Unidos está Miami?","Florida","California","Texas","Georgia"],
+ ["geo","¿En qué estado está Los Ángeles?","California","Nevada","Texas","Arizona"],
+ ["geo","¿Cuál es la ciudad más poblada de Estados Unidos?","Nueva York","Los Ángeles","Chicago","Houston"],
+ ["geo","¿Qué río pasa por El Cairo?","Nilo","Éufrates","Congo","Níger"],
+ ["geo","¿Qué río pasa por Londres?","Támesis","Sena","Danubio","Rin"],
+ ["geo","¿Qué río pasa por París?","Sena","Támesis","Loira","Ródano"],
+ ["geo","¿En qué país está el monte Fuji?","Japón","China","Corea del Sur","Nepal"],
+ ["geo","¿Qué país sudamericano es muy largo y estrecho?","Chile","Perú","Ecuador","Uruguay"],
+ ["geo","¿En qué mar está Cuba?","Caribe","Mediterráneo","Mar del Norte","Mar Rojo"],
+ ["geo","¿Qué estrecho separa España de África?","Gibraltar","Bósforo","Magallanes","Ormuz"],
+ ["geo","¿Qué país es conocido como \"la tierra del sol naciente\"?","Japón","China","Corea del Sur","Tailandia"],
+ ["geo","¿Cuál es el punto de tierra más bajo del planeta?","La orilla del Mar Muerto","El Valle de la Muerte","El Sahara","Los Países Bajos"],
+ ["geo","¿Cuál es el océano más pequeño?","Ártico","Índico","Atlántico","Pacífico"],
+ ["geo","¿Qué línea imaginaria divide la Tierra en norte y sur?","El ecuador","El meridiano de Greenwich","El trópico de Cáncer","El círculo polar"],
+ ["geo","¿Qué país lleva el nombre de la línea del ecuador?","Ecuador","Colombia","Perú","Gabón"],
+ ["geo","¿Cuál es el océano más grande?","Pacífico","Atlántico","Índico","Ártico"],
+ ["geo","¿Qué país tiene más habitantes en Sudamérica?","Brasil","Argentina","Colombia","Perú"],
+ ["geo","¿En qué país están las cataratas de Iguazú?","Argentina y Brasil","Venezuela","Chile","Paraguay y Bolivia"],
+ ["geo","¿En qué país está el Salto Ángel, la cascada más alta del mundo?","Venezuela","Brasil","Colombia","Guyana"],
+ ["geo","¿Cuál de estos países tiene volcanes activos?","Guatemala","Honduras","Belice","Uruguay"],
+ ["geo","¿En qué continente está Australia?","Oceanía","Asia","África","Europa"],
+ ["geo","¿Cuál es la isla más grande del mundo?","Groenlandia","Madagascar","Borneo","Cuba"],
+ ["his","¿En qué año llegó Cristóbal Colón a América?","1492","1502","1482","1512"],
+ ["his","¿En qué año llegó Colón a Honduras, en su cuarto viaje?","1502","1492","1498","1525"],
+ ["his","¿Quién fue el primer presidente de Estados Unidos?","George Washington","Abraham Lincoln","Thomas Jefferson","John Adams"],
+ ["his","¿En qué año empezó la Segunda Guerra Mundial?","1939","1914","1945","1929"],
+ ["his","¿En qué año cayó el Muro de Berlín?","1989","1991","1979","1985"],
+ ["his","¿Qué civilización construyó Machu Picchu?","Inca","Maya","Azteca","Olmeca"],
+ ["his","¿Qué civilización construyó la ciudad de Copán?","Maya","Inca","Azteca","Tolteca"],
+ ["his","¿A quién llaman \"El Libertador\" de Sudamérica?","Simón Bolívar","José de San Martín","Francisco Morazán","Bernardo O'Higgins"],
+ ["his","¿En qué año se independizó Centroamérica de España?","1821","1810","1838","1823"],
+ ["his","¿Qué emperador francés fue derrotado en Waterloo?","Napoleón Bonaparte","Luis XIV","Carlomagno","Luis XVI"],
+ ["his","¿Qué país le regaló la Estatua de la Libertad a Estados Unidos?","Francia","Inglaterra","España","Italia"],
+ ["his","¿Quién fue el primer ser humano en pisar la Luna?","Neil Armstrong","Buzz Aldrin","Yuri Gagarin","Michael Collins"],
+ ["his","¿En qué año terminó la Segunda Guerra Mundial?","1945","1944","1948","1950"],
+ ["his","¿Qué conquistador español derrotó a los aztecas?","Hernán Cortés","Francisco Pizarro","Pedro de Alvarado","Vasco Núñez de Balboa"],
+ ["his","¿En qué año empezó la Primera Guerra Mundial?","1914","1918","1939","1905"],
+ ["his","¿En qué año terminó la Primera Guerra Mundial?","1918","1914","1920","1945"],
+ ["his","¿En qué año comenzó la Revolución Francesa?","1789","1776","1815","1848"],
+ ["his","¿En qué año declaró su independencia Estados Unidos?","1776","1789","1492","1812"],
+ ["his","¿En qué año se consumó la independencia de México?","1821","1810","1910","1836"],
+ ["his","¿En qué año fue el Grito de Dolores en México?","1810","1821","1910","1776"],
+ ["his","¿Quién dio el Grito de Dolores?","Miguel Hidalgo","José María Morelos","Benito Juárez","Agustín de Iturbide"],
+ ["his","¿En qué año empezó la Revolución Mexicana?","1910","1810","1920","1857"],
+ ["his","¿Quién encabezó la Revolución Cubana que triunfó en 1959?","Fidel Castro","Fulgencio Batista","Camilo Torres","José Martí"],
+ ["his","¿De qué país era el Che Guevara?","Argentina","Cuba","Bolivia","México"],
+ ["his","¿Quién fue el primer presidente negro de Sudáfrica?","Nelson Mandela","Desmond Tutu","Thabo Mbeki","Jacob Zuma"],
+ ["his","¿Qué líder de la India promovió la resistencia sin violencia?","Mahatma Gandhi","Jawaharlal Nehru","Indira Gandhi","Buda"],
+ ["his","¿Quién dio el famoso discurso \"Tengo un sueño\"?","Martin Luther King Jr.","Malcolm X","Barack Obama","Rosa Parks"],
+ ["his","¿Quién fue el primer presidente afroamericano de Estados Unidos?","Barack Obama","Joe Biden","Colin Powell","Jesse Jackson"],
+ ["his","¿En qué año fueron los ataques a las Torres Gemelas?","2001","1999","2003","2005"],
+ ["his","¿Quién fue el primer ser humano en viajar al espacio?","Yuri Gagarin","Neil Armstrong","John Glenn","Valentina Tereshkova"],
+ ["his","¿Qué país lanzó el primer satélite artificial, el Sputnik?","Unión Soviética","Estados Unidos","China","Alemania"],
+ ["his","¿Qué imperio construyó el Coliseo?","Romano","Griego","Persa","Otomano"],
+ ["his","¿Quién fue el primer emperador romano?","Augusto","Julio César","Nerón","Constantino"],
+ ["his","¿Qué reina egipcia es famosa por su relación con Julio César y Marco Antonio?","Cleopatra","Nefertiti","Hatshepsut","Isis"],
+ ["his","¿Qué faraón tiene una tumba famosa descubierta en 1922?","Tutankamón","Ramsés II","Keops","Akenatón"],
+ ["his","¿Qué ciudad sepultó el volcán Vesubio en el año 79?","Pompeya","Roma","Atenas","Cartago"],
+ ["his","¿Cómo se llamaba la capital de los aztecas?","Tenochtitlan","Cuzco","Tikal","Teotihuacan"],
+ ["his","¿Cuál era la capital del Imperio inca?","Cuzco","Tenochtitlan","Quito","Lima"],
+ ["his","¿Qué emperador azteca recibió a Hernán Cortés?","Moctezuma II","Cuauhtémoc","Cuitláhuac","Nezahualcóyotl"],
+ ["his","¿Qué conquistador derrotó al Imperio inca?","Francisco Pizarro","Hernán Cortés","Diego de Almagro","Pedro de Valdivia"],
+ ["his","¿Qué cacique lenca resistió a los españoles en Honduras?","Lempira","Atahualpa","Hatuey","Tecún Umán"],
+ ["his","¿Qué guerrero maya k'iche' es héroe nacional de Guatemala?","Tecún Umán","Lempira","Nicarao","Atlácatl"],
+ ["his","¿Qué océano vio por primera vez Vasco Núñez de Balboa en 1513?","Pacífico","Atlántico","Índico","Ártico"],
+ ["his","¿Qué expedición dio la primera vuelta al mundo?","La de Magallanes y Elcano","La de Colón","La de Vasco da Gama","La de Américo Vespucio"],
+ ["his","¿De qué navegante viene el nombre \"América\"?","Américo Vespucio","Cristóbal Colón","Fernando de Magallanes","Juan Caboto"],
+ ["his","¿Cómo se llamaban las tres naves del primer viaje de Colón?","La Niña, la Pinta y la Santa María","La Niña, la Pinta y la Trinidad","La Santa María, la Victoria y la Pinta","La Niña, la Victoria y la Concepción"],
+ ["his","¿Qué reyes financiaron el primer viaje de Colón?","Los Reyes Católicos","Felipe II e Isabel","Carlos V y Juana","Fernando VII e Isabel II"],
+ ["his","¿Qué día se recuerda la llegada de Colón a América?","12 de octubre","15 de septiembre","1 de noviembre","20 de julio"],
+ ["his","¿Qué presidente de Estados Unidos abolió la esclavitud?","Abraham Lincoln","George Washington","Thomas Jefferson","Franklin D. Roosevelt"],
+ ["his","¿Qué presidente de Estados Unidos fue asesinado en Dallas en 1963?","John F. Kennedy","Abraham Lincoln","Richard Nixon","Ronald Reagan"],
+ ["his","¿Qué presidente de Estados Unidos renunció por el caso Watergate?","Richard Nixon","Gerald Ford","Jimmy Carter","Bill Clinton"],
+ ["his","¿Qué país atacó Pearl Harbor en 1941?","Japón","Alemania","Italia","Unión Soviética"],
+ ["his","¿Sobre qué ciudades cayeron las bombas atómicas en 1945?","Hiroshima y Nagasaki","Tokio y Osaka","Kioto y Kobe","Hiroshima y Tokio"],
+ ["his","¿Quién era el líder de la Alemania nazi?","Adolf Hitler","Benito Mussolini","Joseph Stalin","Otto von Bismarck"],
+ ["his","¿Quién gobernó la Italia fascista?","Benito Mussolini","Adolf Hitler","Francisco Franco","Víctor Manuel III"],
+ ["his","¿Quién gobernó España como dictador hasta 1975?","Francisco Franco","Primo de Rivera","Juan Carlos I","Manuel Azaña"],
+ ["his","¿Qué primer ministro británico lideró en la Segunda Guerra Mundial?","Winston Churchill","Neville Chamberlain","Margaret Thatcher","Clement Attlee"],
+ ["his","¿Cómo se llamó la rivalidad entre Estados Unidos y la URSS después de 1945?","Guerra Fría","Gran Guerra","Guerra de los Cien Años","Guerra de Secesión"],
+ ["his","¿En qué año se disolvió la Unión Soviética?","1991","1989","1985","1995"],
+ ["his","¿Qué civilización creó la escritura cuneiforme?","Sumeria","Egipcia","Griega","China"],
+ ["his","¿Qué civilización construyó las pirámides de Giza?","Egipcia","Maya","Azteca","Mesopotámica"],
+ ["his","¿Qué ciudad griega era famosa por sus guerreros?","Esparta","Atenas","Corinto","Tebas"],
+ ["his","¿Qué filósofo griego fue maestro de Platón?","Sócrates","Aristóteles","Pitágoras","Tales"],
+ ["his","¿Quién fue alumno de Platón y maestro de Alejandro Magno?","Aristóteles","Sócrates","Homero","Arquímedes"],
+ ["his","¿Qué rey de Macedonia conquistó un imperio enorme antes de los 33 años?","Alejandro Magno","Julio César","Darío","Leónidas"],
+ ["his","¿Qué ruta comercial unía China con Europa?","La Ruta de la Seda","La Ruta del Té","El Camino Real","La Ruta del Oro"],
+ ["his","¿Qué veneciano viajó a China y escribió sobre ello?","Marco Polo","Cristóbal Colón","Vasco da Gama","Magallanes"],
+ ["his","¿Qué invento de Gutenberg cambió la historia hacia 1450?","La imprenta de tipos móviles","El telescopio","La brújula","El papel"],
+ ["his","¿En qué movimiento cultural trabajaron Leonardo y Miguel Ángel?","El Renacimiento","El Barroco","El Romanticismo","La Ilustración"],
+ ["his","¿En qué año fue fusilado Francisco Morazán?","1842","1838","1821","1850"],
+ ["his","¿En qué país fue fusilado Francisco Morazán?","Costa Rica","Guatemala","El Salvador","Honduras"],
+ ["his","¿Qué filibustero estadounidense fue fusilado en Trujillo en 1860?","William Walker","Henry Morgan","Francis Drake","John Smith"],
+ ["his","¿Qué compañías bananeras dominaron la economía hondureña en el siglo XX?","United Fruit y Standard Fruit","Coca-Cola y Pepsi","Nestlé y Kraft","Ford y General Motors"],
+ ["his","¿En qué año fue la gran huelga bananera de Honduras?","1954","1932","1969","1980"],
+ ["his","¿En qué año fue la \"Guerra del Fútbol\" entre Honduras y El Salvador?","1969","1970","1982","1954"],
+ ["his","¿De qué año es la Constitución actual de Honduras?","1982","1965","1957","1999"],
+ ["his","¿Qué país gobernó Honduras durante la colonia?","España","Inglaterra","Francia","Portugal"],
+ ["his","¿Qué potencia europea ocupó por un tiempo las Islas de la Bahía y la Mosquitia?","Gran Bretaña","Francia","Holanda","Portugal"],
+ ["his","¿Qué pirata famoso atacó el Caribe y llegó a ser gobernador de Jamaica?","Henry Morgan","Barbanegra","Francis Drake","Jean Lafitte"],
+ ["his","¿Cómo le decían al pirata Edward Teach?","Barbanegra","Barbarroja","Garfio","El Holandés"],
+ ["his","¿Qué ciudad maya de Guatemala tiene grandes templos en la selva del Petén?","Tikal","Copán","Palenque","Chichén Itzá"],
+ ["his","¿Qué ciudad maya está en la península de Yucatán?","Chichén Itzá","Tikal","Copán","Quiriguá"],
+ ["his","¿Con qué apodo se conoce a uno de los reyes más famosos de Copán?","18 Conejo","Pakal el Grande","Garra de Jaguar","Serpiente Emplumada"],
+ ["his","¿Quién fundó la dinastía de reyes de Copán?","Yax K'uk' Mo'","18 Conejo","Pakal","Humo Jaguar"],
+ ["his","¿Qué país fue el primero en dar el voto a las mujeres a nivel nacional?","Nueva Zelanda","Estados Unidos","Francia","Inglaterra"],
+ ["his","¿En qué año votaron por primera vez las mujeres en Honduras?","1957","1945","1965","1982"],
+ ["his","¿Qué presidente chileno fue derrocado en 1973?","Salvador Allende","Augusto Pinochet","Eduardo Frei","Ricardo Lagos"],
+ ["his","¿Qué país controló el Canal de Panamá hasta 1999?","Estados Unidos","Francia","Inglaterra","Colombia"],
+ ["his","¿De qué país se separó Panamá en 1903?","Colombia","Costa Rica","Venezuela","España"],
+ ["his","¿Qué país fue la primera república negra independiente?","Haití","Jamaica","Cuba","República Dominicana"],
+ ["his","¿En qué año terminó el dominio español en Cuba?","1898","1868","1902","1959"],
+ ["his","¿Qué personaje aparece en el billete de 1 dólar?","George Washington","Abraham Lincoln","Benjamin Franklin","Thomas Jefferson"],
+ ["his","¿Quién aparece en el billete de 100 dólares?","Benjamin Franklin","George Washington","Abraham Lincoln","Alexander Hamilton"],
+ ["his","¿En qué año se hundió el Titanic?","1912","1905","1920","1898"],
+ ["his","¿Qué héroe cubano escribió \"Versos sencillos\"?","José Martí","Antonio Maceo","Máximo Gómez","Carlos Manuel de Céspedes"],
+ ["his","¿Qué ciudad era la capital de la Federación Centroamericana al final?","San Salvador","Tegucigalpa","Ciudad de Guatemala","Managua"],
+ ["his","¿En qué año se separó Honduras de la Federación Centroamericana?","1838","1821","1842","1856"],
+ ["his","¿Quién fue el primer presidente indígena de México, famoso por las Leyes de Reforma?","Benito Juárez","Porfirio Díaz","Lázaro Cárdenas","Emiliano Zapata"],
+ ["his","¿Qué revolucionario mexicano dijo \"la tierra es de quien la trabaja\"?","Emiliano Zapata","Pancho Villa","Venustiano Carranza","Francisco I. Madero"],
+ ["his","¿Quién gobernó México por más de 30 años antes de la Revolución?","Porfirio Díaz","Benito Juárez","Santa Anna","Victoriano Huerta"],
+ ["cie","¿Cuál es el planeta más cercano al Sol?","Mercurio","Venus","Marte","La Tierra"],
+ ["cie","¿Cuál es la fórmula química del agua?","H2O","CO2","O2","NaCl"],
+ ["cie","¿Qué órgano bombea la sangre?","El corazón","Los pulmones","El hígado","Los riñones"],
+ ["cie","¿A qué velocidad viaja la luz, más o menos?","300,000 km por segundo","30,000 km por segundo","3,000 km por segundo","1,000,000 km por segundo"],
+ ["cie","¿Cuántos dientes tiene un adulto con muelas del juicio?","32","28","30","36"],
+ ["cie","¿Qué tipo de animal es la ballena?","Mamífero","Pez","Reptil","Anfibio"],
+ ["cie","¿Qué planeta es conocido como el planeta rojo?","Marte","Júpiter","Venus","Saturno"],
+ ["cie","¿Qué gas abunda más en el aire que respiramos?","Nitrógeno","Oxígeno","Dióxido de carbono","Hidrógeno"],
+ ["cie","¿A cuántos grados hierve el agua al nivel del mar?","100 °C","90 °C","80 °C","120 °C"],
+ ["cie","¿Cuál es el hueso más largo del cuerpo humano?","Fémur","Tibia","Húmero","Columna"],
+ ["cie","¿Quién propuso la teoría de la relatividad?","Albert Einstein","Isaac Newton","Galileo Galilei","Nikola Tesla"],
+ ["cie","¿Cuántas patas tiene un insecto?","6","8","4","10"],
+ ["cie","¿Qué vitamina produce el cuerpo con la luz del sol?","Vitamina D","Vitamina C","Vitamina A","Vitamina B12"],
+ ["cie","¿Cuál es la estrella más cercana a la Tierra?","El Sol","Sirio","Alfa Centauri","La Estrella Polar"],
+ ["cie","¿Cuántos planetas tiene el sistema solar?","8","9","7","10"],
+ ["cie","¿Qué planeta tiene los anillos más visibles?","Saturno","Júpiter","Urano","Neptuno"],
+ ["cie","¿Cuál es el planeta más caliente del sistema solar?","Venus","Mercurio","Marte","Júpiter"],
+ ["cie","¿Qué planeta está más lejos del Sol?","Neptuno","Urano","Saturno","Júpiter"],
+ ["cie","¿Qué dejó de considerarse planeta en 2006?","Plutón","Ceres","La Luna","Mercurio"],
+ ["cie","¿Cuánto tarda la Tierra en dar una vuelta al Sol?","Un año","Un mes","Un día","Una semana"],
+ ["cie","¿Cuánto tarda la Tierra en girar sobre sí misma?","24 horas","365 días","12 horas","7 días"],
+ ["cie","¿Qué causa principalmente las mareas?","La Luna","El viento","Los peces","Los volcanes"],
+ ["cie","¿Qué es un eclipse solar?","La Luna tapa al Sol","La Tierra tapa a la Luna","El Sol se apaga","Una tormenta solar"],
+ ["cie","¿Cómo se llama nuestra galaxia?","Vía Láctea","Andrómeda","Orión","Triángulo"],
+ ["cie","¿Qué gas necesitamos para respirar?","Oxígeno","Nitrógeno","Helio","Metano"],
+ ["cie","¿Qué gas hace que los globos floten?","Helio","Oxígeno","Nitrógeno","Dióxido de carbono"],
+ ["cie","¿Cuál es el símbolo químico del oxígeno?","O","Ox","Og","Om"],
+ ["cie","¿Cuál es el símbolo químico del hierro?","Fe","Hi","Ir","H"],
+ ["cie","¿Cuál es el símbolo químico de la plata?","Ag","Pl","Pt","Au"],
+ ["cie","¿Cuál es el símbolo químico del sodio?","Na","So","Sd","S"],
+ ["cie","¿Cuál es el elemento más abundante del universo?","Hidrógeno","Oxígeno","Carbono","Hierro"],
+ ["cie","¿Cuál es el material natural más duro?","Diamante","Hierro","Cuarzo","Granito"],
+ ["cie","¿De qué elemento está hecho el diamante?","Carbono","Silicio","Hierro","Calcio"],
+ ["cie","¿A qué temperatura se congela el agua?","0 °C","10 °C","-10 °C","4 °C"],
+ ["cie","¿Cuál es la temperatura normal del cuerpo humano?","Unos 37 °C","Unos 35 °C","Unos 40 °C","Unos 32 °C"],
+ ["cie","¿Cuántos litros de sangre tiene un adulto, más o menos?","5","2","10","8"],
+ ["cie","¿Qué órganos filtran la sangre y producen la orina?","Los riñones","El hígado","El corazón","El estómago"],
+ ["cie","¿Qué órgano produce la insulina?","El páncreas","El hígado","Los riñones","El bazo"],
+ ["cie","¿Cuántos pulmones tenemos?","2","1","3","4"],
+ ["cie","¿Qué tipo de sangre es el donante universal?","O negativo","AB positivo","A positivo","B negativo"],
+ ["cie","¿Qué parte del ojo tiene color?","El iris","La pupila","La córnea","La retina"],
+ ["cie","¿Cuántos sentidos tiene tradicionalmente el ser humano?","5","4","6","7"],
+ ["cie","¿Dónde está el hueso más pequeño del cuerpo?","En el oído","En la mano","En el pie","En la nariz"],
+ ["cie","¿Cómo se llama el hueso más pequeño del cuerpo?","Estribo","Fémur","Rótula","Falange"],
+ ["cie","¿Qué hueso protege el cerebro?","El cráneo","La columna","Las costillas","La pelvis"],
+ ["cie","¿Qué científico formuló la ley de la gravitación universal?","Isaac Newton","Albert Einstein","Galileo Galilei","Charles Darwin"],
+ ["cie","¿Quién propuso la evolución por selección natural?","Charles Darwin","Gregor Mendel","Louis Pasteur","Isaac Newton"],
+ ["cie","¿Quién descubrió la penicilina?","Alexander Fleming","Louis Pasteur","Marie Curie","Robert Koch"],
+ ["cie","¿Qué científica ganó dos premios Nobel por estudiar la radiactividad?","Marie Curie","Rosalind Franklin","Ada Lovelace","Lise Meitner"],
+ ["cie","¿Qué estudia la botánica?","Las plantas","Los animales","Las rocas","Las estrellas"],
+ ["cie","¿Qué estudia la zoología?","Los animales","Las plantas","El clima","Los volcanes"],
+ ["cie","¿Qué estudia la geología?","La Tierra y sus rocas","Los mares","Las plantas","El cuerpo"],
+ ["cie","¿Qué estudia un meteorólogo?","El tiempo y el clima","Las rocas","Los meteoritos","Los insectos"],
+ ["cie","¿Qué escala mide la fuerza de los huracanes?","Saffir-Simpson","Richter","Celsius","Mohs"],
+ ["cie","¿Qué escala se hizo famosa para medir sismos?","Richter","Saffir-Simpson","Kelvin","Mohs"],
+ ["cie","¿Qué parte de la planta hace principalmente la fotosíntesis?","Las hojas","Las raíces","Las flores","Las semillas"],
+ ["cie","¿Qué pigmento da el color verde a las plantas?","Clorofila","Melanina","Hemoglobina","Caroteno"],
+ ["cie","¿Qué proteína de la sangre transporta el oxígeno?","Hemoglobina","Insulina","Queratina","Colágeno"],
+ ["cie","¿Qué pigmento da color a nuestra piel?","Melanina","Clorofila","Hemoglobina","Queratina"],
+ ["cie","¿De qué está hecho principalmente el pelo y las uñas?","Queratina","Calcio","Colágeno","Hierro"],
+ ["cie","¿Qué mineral es clave para tener huesos fuertes?","Calcio","Hierro","Sodio","Yodo"],
+ ["cie","¿Qué fruta es famosa por su potasio?","Banano","Fresa","Uva","Pera"],
+ ["cie","¿Qué vitamina abunda en la naranja?","Vitamina C","Vitamina D","Vitamina K","Vitamina B12"],
+ ["cie","¿Dónde viaja más rápido el sonido?","En el agua","En el aire","Igual en los dos","En el vacío"],
+ ["cie","¿Qué viaja más rápido, la luz o el sonido?","La luz","El sonido","Igual","Depende del clima"],
+ ["cie","¿Por qué vemos el rayo antes de oír el trueno?","La luz viaja más rápido que el sonido","El trueno sucede después","El rayo está más cerca","Los oídos son lentos"],
+ ["cie","¿Qué capa de la atmósfera nos protege de los rayos ultravioleta?","La capa de ozono","Las nubes","La ionosfera","La niebla"],
+ ["cie","¿Qué energía se obtiene del viento?","Eólica","Solar","Hidráulica","Geotérmica"],
+ ["cie","¿Qué energía se obtiene del agua de las represas?","Hidroeléctrica","Eólica","Solar","Nuclear"],
+ ["cie","¿Qué energía viene del calor del interior de la Tierra?","Geotérmica","Eólica","Solar","Mareomotriz"],
+ ["cie","¿Qué instrumento sirve para ver cosas muy pequeñas?","Microscopio","Telescopio","Periscopio","Estetoscopio"],
+ ["cie","¿Qué instrumento usa el médico para escuchar el corazón?","Estetoscopio","Termómetro","Microscopio","Otoscopio"],
+ ["cie","¿Qué instrumento sirve para ver estrellas lejanas?","Telescopio","Microscopio","Caleidoscopio","Barómetro"],
+ ["cie","¿Qué instrumento indica el norte?","Brújula","Reloj","Barómetro","Termómetro"],
+ ["cie","¿En qué estado está el agua cuando es hielo?","Sólido","Líquido","Gaseoso","Plasma"],
+ ["cie","¿Cómo se llama el paso de líquido a gas?","Evaporación","Condensación","Solidificación","Fusión"],
+ ["cie","¿Cómo se llama el paso de gas a líquido?","Condensación","Evaporación","Sublimación","Fusión"],
+ ["cie","¿Cómo se llama el paso de sólido a líquido?","Fusión","Condensación","Evaporación","Solidificación"],
+ ["cie","¿Qué tipo de animal es la rana?","Anfibio","Reptil","Mamífero","Pez"],
+ ["cie","¿Qué tipo de animal es la serpiente?","Reptil","Anfibio","Mamífero","Pez"],
+ ["cie","¿Qué tipo de animal es el tiburón?","Pez","Mamífero","Reptil","Anfibio"],
+ ["cie","¿Qué tipo de animal es el delfín?","Mamífero","Pez","Reptil","Anfibio"],
+ ["cie","¿Qué animal pasa de oruga a adulto?","La mariposa","La abeja","La araña","La hormiga"],
+ ["cie","¿Qué es el ADN?","El material genético de los seres vivos","Una vitamina","Un tipo de hueso","Una enfermedad"],
+ ["cie","¿Cuál es la unidad básica de la vida?","La célula","El átomo","El órgano","El tejido"],
+ ["cie","¿Qué partícula del átomo tiene carga negativa?","Electrón","Protón","Neutrón","Núcleo"],
+ ["cie","¿Qué partícula del átomo tiene carga positiva?","Protón","Electrón","Neutrón","Fotón"],
+ ["cie","¿Cuánto vale aproximadamente pi?","3.1416","2.7182","1.6180","3.3333"],
+ ["cie","¿Cuántos grados suman los ángulos de un triángulo?","180","360","90","270"],
+ ["cie","¿Qué unidad mide la fuerza?","Newton","Joule","Vatio","Pascal"],
+ ["cie","¿Qué unidad mide la energía?","Joule","Newton","Voltio","Metro"],
+ ["cie","¿Qué provoca normalmente un tsunami?","Un terremoto bajo el mar","La Luna llena","La marea alta","La lluvia"],
+ ["cie","¿Qué expulsa un volcán en erupción?","Lava, ceniza y gases","Solo agua","Arena y sal","Hielo"],
+ ["cie","¿Cómo se llama la roca fundida antes de salir del volcán?","Magma","Basalto","Ceniza","Piedra pómez"],
+ ["cie","¿Cuál es la capa más externa de la Tierra?","La corteza","El manto","El núcleo","La litosfera interna"],
+ ["cie","¿Qué planeta tiene la Gran Mancha Roja?","Júpiter","Marte","Saturno","Venus"],
+ ["cie","¿Qué satélite natural tiene la Tierra?","La Luna","Fobos","Titán","Europa"],
+ ["cie","¿Cuántos cromosomas tiene normalmente una persona?","46","23","48","44"],
+ ["cie","¿Qué órgano del cuerpo es el más grande por dentro?","El hígado","El corazón","El estómago","El páncreas"],
+ ["cie","¿Qué científico italiano usó el telescopio para estudiar el cielo en 1609?","Galileo Galilei","Leonardo da Vinci","Copérnico","Kepler"],
+ ["cie","¿Qué científico dijo que la Tierra gira alrededor del Sol, en el siglo XVI?","Nicolás Copérnico","Ptolomeo","Aristóteles","Isaac Newton"],
+ ["com","¿De qué planta se hace el tequila?","Agave azul","Caña de azúcar","Maíz","Cebada"],
+ ["com","¿Cuál es el ingrediente principal del guacamole?","Aguacate","Tomate","Pepino","Chile verde"],
+ ["com","¿Qué cóctel lleva ron, hierbabuena, limón, azúcar y soda?","Mojito","Daiquiri","Cuba libre","Piña colada"],
+ ["com","¿De qué país es originaria la pizza?","Italia","Estados Unidos","Francia","Grecia"],
+ ["com","¿De qué se hace el ron?","Caña de azúcar","Papa","Uva","Agave"],
+ ["com","¿De qué fruta se hace el vino?","Uva","Manzana","Ciruela","Fresa"],
+ ["com","Además de piña y ron, ¿qué lleva una piña colada?","Crema de coco","Jugo de naranja","Leche condensada","Granadina"],
+ ["com","¿De qué cereal se hace principalmente la cerveza?","Cebada","Arroz","Maíz","Avena"],
+ ["com","¿De qué país es originario el sushi?","Japón","China","Corea","Tailandia"],
+ ["com","¿Qué es la Salva Vida?","Una cerveza hondureña","Un ron hondureño","Una soda hondureña","Un café hondureño"],
+ ["com","¿Qué licor lleva una margarita?","Tequila","Vodka","Ron","Ginebra"],
+ ["com","¿De qué país es originaria la paella?","España","México","Italia","Portugal"],
+ ["com","¿Qué país produce más café en el mundo?","Brasil","Colombia","Honduras","Vietnam"],
+ ["com","¿Qué licor lleva un Cuba libre?","Ron","Tequila","Whisky","Vodka"],
+ ["com","¿Qué bebida es la base de un Long Island?","Varios licores con cola","Solo ron con coco","Vino tinto con frutas","Cerveza con limón"],
+ ["com","¿De qué país es originario el taco?","México","España","Guatemala","Estados Unidos"],
+ ["com","¿De qué país es el kimchi?","Corea","Japón","China","Tailandia"],
+ ["com","¿Qué país es famoso por la sopa pho?","Vietnam","Tailandia","China","Japón"],
+ ["com","¿Qué país tiene el ceviche como plato nacional?","Perú","México","Chile","Ecuador"],
+ ["com","¿De qué países son típicas las arepas?","Venezuela y Colombia","México y Guatemala","Argentina y Chile","Cuba y Puerto Rico"],
+ ["com","¿Qué país es famoso por el asado y el dulce de leche?","Argentina","España","México","Perú"],
+ ["com","¿De qué país son típicas las pupusas?","El Salvador","Honduras","Guatemala","Nicaragua"],
+ ["com","¿Qué es el gallo pinto?","Arroz con frijoles","Un pollo frito","Una sopa","Un postre"],
+ ["com","¿De qué país es el mole poblano?","México","Guatemala","Perú","España"],
+ ["com","¿Qué ingrediente da el color amarillo a la paella valenciana?","Azafrán","Curry","Achiote","Mostaza"],
+ ["com","¿De qué semilla se hace el chocolate?","Cacao","Café","Vainilla","Almendra"],
+ ["com","¿Qué pueblos de Mesoamérica tomaban cacao como bebida?","Mayas y aztecas","Incas y mapuches","Romanos y griegos","Vikingos y celtas"],
+ ["com","¿De qué está hecho el tofu?","Soya","Arroz","Trigo","Leche de vaca"],
+ ["com","¿De qué se hace normalmente el pan?","Harina de trigo","Harina de maíz","Arroz","Papa"],
+ ["com","¿Qué queso se usa en la pizza clásica?","Mozzarella","Cheddar","Manchego","Roquefort"],
+ ["com","¿De qué país es originario el queso cheddar?","Inglaterra","Francia","Suiza","Holanda"],
+ ["com","¿Qué queso suizo es famoso por sus hoyos?","Emmental","Mozzarella","Parmesano","Cheddar"],
+ ["com","¿Qué es el parmesano?","Un queso italiano duro","Una pasta","Un vino","Un embutido"],
+ ["com","¿Qué pasta tiene forma de tubos cortos cortados en diagonal?","Penne","Espagueti","Lasaña","Fetuchini"],
+ ["com","¿Qué salsa italiana lleva albahaca, piñones y queso?","Pesto","Boloñesa","Carbonara","Alfredo"],
+ ["com","¿Qué salsa lleva carne molida y tomate?","Boloñesa","Pesto","Alfredo","Carbonara"],
+ ["com","¿Qué café se hace con espresso y leche espumada?","Capuchino","Americano","Espresso solo","Café de olla"],
+ ["com","¿Qué bebida argentina se toma con bombilla?","Mate","Horchata","Té chai","Pozol"],
+ ["com","¿Qué licor, típico de Rusia y Polonia, se hace con granos o papa?","Vodka","Whisky","Tequila","Ron"],
+ ["com","¿De qué país es el whisky bourbon?","Estados Unidos","Escocia","Irlanda","Canadá"],
+ ["com","¿Qué fruto da el sabor principal a la ginebra?","Enebro","Uva","Manzana","Limón"],
+ ["com","¿De qué país es la cerveza Corona?","México","España","Estados Unidos","Colombia"],
+ ["com","¿De qué país es la cerveza Heineken?","Países Bajos","Alemania","Bélgica","Dinamarca"],
+ ["com","¿De qué país es la cerveza Paulaner?","Alemania","Austria","Bélgica","Países Bajos"],
+ ["com","¿Qué es una weissbier?","Cerveza de trigo","Cerveza negra","Vino blanco","Licor de hierbas"],
+ ["com","¿Qué cervecera hace la Salva Vida y la Port Royal?","Cervecería Hondureña","Embotelladora La Reyna","Coca-Cola FEMSA","Grupo Jaremar"],
+ ["com","¿De qué país es el ron Flor de Caña?","Nicaragua","Honduras","Guatemala","Cuba"],
+ ["com","¿De qué país es el ron Zacapa?","Guatemala","Nicaragua","Cuba","Venezuela"],
+ ["com","¿De qué país es el ron Havana Club?","Cuba","Puerto Rico","República Dominicana","Jamaica"],
+ ["com","¿En qué país se fundó Bacardí?","Cuba","Puerto Rico","Bahamas","España"],
+ ["com","¿De qué país es el whisky Johnnie Walker?","Escocia","Irlanda","Estados Unidos","Inglaterra"],
+ ["com","¿De qué país es el whiskey Jack Daniel's?","Estados Unidos","Escocia","Irlanda","Canadá"],
+ ["com","¿De qué estado de Estados Unidos es el Jack Daniel's?","Tennessee","Kentucky","Texas","Virginia"],
+ ["com","¿De qué país es el whiskey Jameson?","Irlanda","Escocia","Inglaterra","Estados Unidos"],
+ ["com","¿De qué país es el vodka Absolut?","Suecia","Rusia","Polonia","Finlandia"],
+ ["com","¿De qué país es el vodka Grey Goose?","Francia","Rusia","Suecia","Estados Unidos"],
+ ["com","¿De qué país es el licor Jägermeister?","Alemania","Austria","Suiza","Italia"],
+ ["com","¿Qué licor irlandés es cremoso y lleva whiskey?","Baileys","Kahlúa","Amaretto","Frangelico"],
+ ["com","¿De qué sabor es el licor Kahlúa?","Café","Coco","Almendra","Menta"],
+ ["com","¿Qué vino espumoso viene de una región de Francia con el mismo nombre?","Champán","Cava","Prosecco","Lambrusco"],
+ ["com","¿Qué lleva un daiquiri clásico?","Ron, limón y azúcar","Tequila, limón y sal","Vodka y jugo de tomate","Ginebra y tónica"],
+ ["com","¿Qué lleva un Bloody Mary?","Vodka y jugo de tomate","Ron y coco","Tequila y naranja","Whisky y limón"],
+ ["com","¿Qué cóctel lleva tequila, jugo de naranja y granadina?","Tequila Sunrise","Margarita","Paloma","Cosmopolitan"],
+ ["com","¿Qué cóctel lleva vodka, triple sec, arándano y limón?","Cosmopolitan","Mojito","Daiquiri","Caipiriña"],
+ ["com","¿De qué país es la caipiriña?","Brasil","Cuba","México","Perú"],
+ ["com","¿Con qué licor se hace la caipiriña?","Cachaça","Ron","Pisco","Tequila"],
+ ["com","¿Qué cóctel se hace con ginebra y agua tónica?","Gin tonic","Cuba libre","Destornillador","Martini"],
+ ["com","¿Qué lleva un \"destornillador\"?","Vodka y jugo de naranja","Ron y cola","Tequila y limón","Ginebra y tónica"],
+ ["com","¿Qué lleva una michelada?","Cerveza, limón y salsas","Vino y fruta","Ron y coco","Tequila y naranja"],
+ ["com","¿Qué cóctel se sirve en copa cónica con una aceituna?","Martini","Mojito","Margarita","Piña colada"],
+ ["com","¿Qué agente secreto pide su martini \"agitado, no revuelto\"?","James Bond","Jason Bourne","Ethan Hunt","Jack Ryan"],
+ ["com","¿De qué parte del cerdo sale el tocino?","La panza","La pierna","El lomo","La cabeza"],
+ ["com","¿De qué animal es un corte rib eye?","Res","Cerdo","Pollo","Cordero"],
+ ["com","¿Qué término de carne es el más cocido?","Bien cocido","Término medio","Tres cuartos","Rojo inglés"],
+ ["com","¿Qué es el chimichurri?","Una salsa de perejil, ajo y aceite","Un postre","Un embutido","Una bebida"],
+ ["com","¿Qué salsa se hace con yema de huevo y aceite?","Mayonesa","Ketchup","Mostaza","Barbacoa"],
+ ["com","¿De qué fruta se hace el ketchup?","Tomate","Fresa","Chile rojo","Remolacha"],
+ ["com","¿Qué especia es la más cara del mundo?","Azafrán","Vainilla","Canela","Cardamomo"],
+ ["com","¿De qué planta viene la vainilla?","De una orquídea","Del cacao","De una palmera","De un cactus"],
+ ["com","¿Qué fruta tiene las semillas por fuera?","Fresa","Mango","Kiwi","Papaya"],
+ ["com","¿Qué fruta tropical tiene una corona de hojas?","Piña","Mango","Papaya","Guayaba"],
+ ["com","¿Qué postre de Semana Santa en Honduras lleva pan y miel?","Torrejas","Arroz con leche","Flan","Tres leches"],
+ ["com","¿Qué postre se hace con huevos, leche, azúcar y caramelo?","Flan","Brownie","Tres leches","Pie de manzana"],
+ ["com","¿En qué país nació el brownie?","Estados Unidos","Inglaterra","Francia","Suiza"],
+ ["com","¿Qué es la \"sopa de caracol\" en Honduras?","Una sopa con caracol y leche de coco","Una sopa de frijoles","Un postre","Una bebida"],
+ ["com","¿Qué lleva una baleada sencilla?","Frijoles, queso y mantequilla","Pollo y arroz","Huevo y aguacate","Carne y papas"],
+ ["com","¿Qué tipo de tortilla se usa en la baleada?","De harina","De maíz","De papa","De arroz"],
+ ["com","¿Qué son las \"tajadas\" en Honduras?","Plátano frito en rodajas","Papas fritas","Yuca hervida","Pan frito"],
+ ["com","¿Qué es la \"chuleta\" en la comida hondureña?","Corte de cerdo","Corte de pescado","Pan dulce","Salsa"],
+ ["com","¿Qué es el \"chismol\"?","Una salsa de tomate, cebolla y chile picado","Un postre de coco","Una bebida de maíz","Un queso"],
+ ["com","¿Qué es la \"mantequilla\" que se le pone a la baleada?","Crema ácida tipo nata","Mantequilla de maní","Margarina","Queso derretido"],
+ ["com","¿Qué bebida caliente se toma mucho en la mañana en Honduras?","Café","Té verde","Mate","Chocolate frío"],
+ ["com","¿Qué fruta de cáscara verde y pulpa cremosa se usa en el guacamole?","Aguacate","Kiwi","Mango","Guayaba"],
+ ["com","¿Qué cereal se usa para hacer las tortillas tradicionales?","Maíz","Trigo","Avena","Cebada"],
+ ["com","¿Qué grano es la base del sushi?","Arroz","Trigo","Maíz","Quinoa"],
+ ["com","¿Qué alga se usa para envolver el sushi?","Nori","Kombu","Espirulina","Wakame"],
+ ["com","¿Qué salsa oscura y salada acompaña al sushi?","Salsa de soya","Salsa inglesa","Salsa barbacoa","Salsa de ostras"],
+ ["com","¿Qué pasta verde y picante acompaña al sushi?","Wasabi","Pesto","Guacamole","Chimichurri"],
+ ["com","¿Qué lleva una margarita clásica?","Tequila, triple sec y limón","Ron, menta y azúcar","Vodka y naranja","Ginebra y tónica"],
+ ["com","¿De qué país es originaria la hamburguesa como la conocemos?","Estados Unidos","Alemania","Inglaterra","Francia"],
+ ["com","¿Qué fruta seca se obtiene de la uva?","Pasa","Ciruela pasa","Dátil","Higo"],
+ ["com","¿Qué bebida se hace fermentando jugo de manzana?","Sidra","Vino tinto","Sake","Pulque"],
+ ["com","¿De qué se hace el sake japonés?","Arroz","Uva","Cebada","Papa"],
+ ["ani","¿Cuántos corazones tiene un pulpo?","3","1","2","4"],
+ ["ani","¿Cuál es el animal más alto del mundo?","La jirafa","El elefante","El avestruz","El camello"],
+ ["ani","¿Qué animal es llamado \"el rey de la selva\"?","El león","El tigre","El jaguar","El gorila"],
+ ["ani","¿Cuál es el ave más grande del mundo?","El avestruz","El cóndor","El águila","El emú"],
+ ["ani","¿Qué mamífero pone huevos?","El ornitorrinco","El murciélago","El delfín","El canguro"],
+ ["ani","¿Cuántos brazos tiene un pulpo?","8","6","10","12"],
+ ["ani","¿De qué se alimenta principalmente el panda?","Bambú","Peces","Frutas","Insectos"],
+ ["ani","¿Qué reptil cambia de color para camuflarse?","El camaleón","La iguana","El cocodrilo","La tortuga"],
+ ["ani","¿Cómo se llama la cría del caballo?","Potro","Ternero","Cordero","Cachorro"],
+ ["ani","¿Cuál es el felino más grande de América?","El jaguar","El puma","El ocelote","El lince"],
+ ["ani","¿Qué es el manatí?","Un mamífero marino","Un pez","Un reptil","Un anfibio"],
+ ["ani","¿Cuál es el animal más grande que ha existido?","La ballena azul","El tiburón ballena","El elefante africano","El tiranosaurio"],
+ ["ani","¿Cuál es el único mamífero que puede volar?","El murciélago","La ardilla voladora","El colibrí","El pingüino"],
+ ["ani","¿Qué animal produce la miel?","La abeja","La avispa","La hormiga","La mariposa"],
+ ["ani","¿Qué ave es la más rápida del mundo en picada?","Halcón peregrino","Águila real","Colibrí","Avestruz"],
+ ["ani","¿Cómo se llama la cría de la vaca?","Ternero","Potro","Cordero","Lechón"],
+ ["ani","¿Cómo se llama la cría de la oveja?","Cordero","Cabrito","Ternero","Potrillo"],
+ ["ani","¿Cómo se llama la cría del cerdo?","Lechón","Ternero","Cordero","Cachorro"],
+ ["ani","¿Cómo se llama la cría de la gallina?","Pollito","Patito","Gazapo","Cachorro"],
+ ["ani","¿Cómo se llama la cría del conejo?","Gazapo","Lechón","Ternero","Potro"],
+ ["ani","¿Cómo se llama la cría de la rana?","Renacuajo","Larva","Alevín","Pollito"],
+ ["ani","¿Cómo se llaman las crías de los peces?","Alevines","Renacuajos","Polluelos","Cachorros"],
+ ["ani","¿Cómo se llama la hembra del caballo?","Yegua","Vaca","Burra","Oveja"],
+ ["ani","¿Cómo se llama un grupo de lobos?","Manada","Bandada","Cardumen","Enjambre"],
+ ["ani","¿Cómo se llama un grupo de peces?","Cardumen","Manada","Bandada","Jauría"],
+ ["ani","¿Cómo se llama un grupo de aves volando?","Bandada","Cardumen","Rebaño","Piara"],
+ ["ani","¿Cómo se llama un grupo de abejas?","Enjambre","Manada","Bandada","Rebaño"],
+ ["ani","¿Cómo se llama un grupo de ovejas?","Rebaño","Piara","Cardumen","Jauría"],
+ ["ani","¿Cuál de estos animales es herbívoro?","La vaca","El león","El tiburón","El águila"],
+ ["ani","¿Cuál de estos animales es carnívoro?","El león","La vaca","La jirafa","El conejo"],
+ ["ani","¿Cómo se llaman los animales que comen de todo?","Omnívoros","Herbívoros","Carnívoros","Insectívoros"],
+ ["ani","¿Qué animal guarda grasa en su joroba?","El camello","El elefante","La jirafa","El caballo"],
+ ["ani","¿Cuál es el animal terrestre más grande?","El elefante africano","El rinoceronte","El hipopótamo","La jirafa"],
+ ["ani","¿Qué animal tiene rayas blancas y negras?","La cebra","El tigre","El panda","El caballo"],
+ ["ani","¿Qué animal salta con sus patas traseras y es símbolo de Australia?","Canguro","Koala","Wombat","Emú"],
+ ["ani","¿De qué se alimenta el koala?","Hojas de eucalipto","Bambú","Insectos","Frutas"],
+ ["ani","¿Cuántos años puede vivir una tortuga gigante?","Más de 100 años","Unos 20 años","Unos 10 años","Unos 5 años"],
+ ["ani","¿Qué ave se considera símbolo de la sabiduría?","El búho","El loro","La paloma","El cuervo"],
+ ["ani","¿Qué ave puede imitar la voz humana?","El loro","La paloma","El búho","El pelícano"],
+ ["ani","¿Qué ave que no vuela vive en la Antártida?","El pingüino","El avestruz","El kiwi","El emú"],
+ ["ani","¿Qué ave puede volar hacia atrás?","El colibrí","El halcón","La golondrina","El loro"],
+ ["ani","¿Qué ave es el símbolo nacional de Estados Unidos?","Águila calva","Cóndor","Halcón","Pavo"],
+ ["ani","¿Cuál es el ave nacional de Guatemala?","Quetzal","Guara roja","Torogoz","Cóndor"],
+ ["ani","¿Cuál es el ave nacional de El Salvador?","Torogoz","Quetzal","Guardabarranco","Guara roja"],
+ ["ani","¿Cuál es el ave nacional de Nicaragua?","Guardabarranco","Torogoz","Quetzal","Yigüirro"],
+ ["ani","¿Cuál es el ave nacional de Costa Rica?","Yigüirro","Quetzal","Tucán","Guardabarranco"],
+ ["ani","¿Qué serpiente es famosa por el sonido de su cola?","Cascabel","Cobra","Pitón","Coral"],
+ ["ani","¿Qué serpiente de la India levanta la cabeza ante el encantador?","Cobra","Mamba","Boa","Cascabel"],
+ ["ani","¿Qué serpiente mata a sus presas apretándolas?","Boa","Cobra","Coral","Cascabel"],
+ ["ani","¿Cuál es el pez más grande del mundo?","Tiburón ballena","Tiburón blanco","Mantarraya","Pez espada"],
+ ["ani","¿Qué animal marino tiene normalmente cinco brazos?","Estrella de mar","Pulpo","Medusa","Caballito de mar"],
+ ["ani","¿Qué animal marino suelta tinta para escapar?","Pulpo","Delfín","Tortuga","Cangrejo"],
+ ["ani","¿Cuál es la tortuga marina más grande?","Tortuga laúd","Tortuga verde","Carey","Tortuga lora"],
+ ["ani","¿Qué animal construye represas en los ríos?","El castor","La nutria","El mapache","El tejón"],
+ ["ani","¿Qué animal muy lento vive colgado de los árboles?","El perezoso","El koala","El mono","La ardilla"],
+ ["ani","¿Cuántas vidas tiene un gato según el dicho en español?","7","9","5","3"],
+ ["ani","¿Qué animal relincha?","El caballo","El burro","La vaca","La oveja"],
+ ["ani","¿Qué animal rebuzna?","El burro","El caballo","El cerdo","La cabra"],
+ ["ani","¿Qué animal muge?","La vaca","La oveja","El caballo","La cabra"],
+ ["ani","¿Qué animal bala?","La oveja","La vaca","El cerdo","El perro"],
+ ["ani","¿Qué animal ruge?","El león","El perro","El caballo","La oveja"],
+ ["ani","¿Qué animal aúlla a la luna en las películas?","El lobo","El oso","El gato","El búho"],
+ ["ani","¿Qué insecto produce la seda?","El gusano de seda","La abeja","La hormiga","La mosca"],
+ ["ani","¿Cuántos ojos tiene la mayoría de las arañas?","8","2","6","4"],
+ ["ani","¿Qué insecto brilla en la noche?","La luciérnaga","El grillo","La polilla","La cigarra"],
+ ["ani","¿Qué insecto hace \"cri cri\" de noche?","El grillo","La luciérnaga","La mosca","La hormiga"],
+ ["ani","¿Qué mosquito transmite el dengue?","Aedes aegypti","Anopheles","Mosca doméstica","Tábano"],
+ ["ani","¿Qué animal hiberna en invierno?","El oso","El león","La jirafa","El camello"],
+ ["ani","¿Qué ballena tiene un cuerno largo en la cabeza?","Narval","Orca","Cachalote","Ballena azul"],
+ ["ani","¿Qué animal del Ártico tiene colmillos largos?","La morsa","La foca","El pingüino","El oso polar"],
+ ["ani","¿De qué color es la piel del oso polar bajo el pelo?","Negra","Blanca","Rosada","Gris"],
+ ["ani","¿Cuál es el reptil más grande del mundo?","Cocodrilo marino","Anaconda","Dragón de Komodo","Caimán"],
+ ["ani","¿En qué país vive el dragón de Komodo?","Indonesia","Australia","Filipinas","India"],
+ ["ani","¿En qué país viven los pandas gigantes en libertad?","China","Japón","India","Tailandia"],
+ ["ani","¿En qué continente vive la mayoría de los leones salvajes?","África","Asia","América","Europa"],
+ ["ani","¿En qué continente viven los canguros?","Oceanía","África","Asia","América"],
+ ["ani","¿Qué animal es el símbolo de la organización WWF?","El panda","El tigre","El elefante","La ballena"],
+ ["ani","¿Cuál es el primate más grande?","El gorila","El chimpancé","El orangután","El babuino"],
+ ["ani","¿Qué mono de Honduras se escucha a kilómetros?","El mono aullador","El mono araña","El chimpancé","El tití"],
+ ["ani","¿Cómo se le dice al tapir en Honduras?","Danto","Chancho de monte","Tepezcuintle","Pizote"],
+ ["ani","¿Qué animal es el pizote?","Coatí","Zorrillo","Armadillo","Mapache"],
+ ["ani","¿Qué animal tiene caparazón de placas y se protege enrollándose?","Armadillo","Zorrillo","Tacuazín","Puercoespín"],
+ ["ani","¿Qué es un tacuazín?","Una zarigüeya","Un mapache","Un murciélago","Un ratón de campo"],
+ ["ani","¿Qué animal suelta un olor fuerte para defenderse?","El zorrillo","El armadillo","El conejo","La ardilla"],
+ ["ani","¿Qué ave teje nidos colgantes muy largos?","Oropéndola","Colibrí","Zanate","Paloma"],
+ ["ani","¿Qué ave negra de cola larga es muy común en las ciudades de Honduras?","Zanate","Cuervo","Golondrina","Gorrión"],
+ ["ani","¿Qué lagarto grande se come en algunas zonas de Honduras?","Garrobo","Camaleón","Salamandra","Gecko"],
+ ["ani","¿Por qué son rosados los flamencos?","Por lo que comen","Por el sol","Porque nacen rosados","Por el agua salada"],
+ ["ani","¿Qué animal puede dormir de pie?","El caballo","El perro","El gato","El cerdo"],
+ ["ani","¿Qué animal tiene fama de buena memoria según el dicho?","El elefante","El delfín","El perro","El loro"],
+ ["ani","¿Cuántas patas tiene un cangrejo?","10","8","6","12"],
+ ["ani","¿Qué animal es el macho de la gallina?","El gallo","El pato","El pavo","El ganso"],
+ ["ani","¿Qué animal tiene la trompa más larga?","El elefante","El tapir","El oso hormiguero","El cerdo"],
+ ["ani","¿Qué animal come principalmente hormigas con su lengua larga?","Oso hormiguero","Armadillo","Perezoso","Tejón"],
+ ["ani","¿Qué ave es famosa por su cola de colores en abanico?","Pavo real","Guacamaya","Faisán","Gallo"],
+ ["ani","¿Qué animal es más grande, la orca o el delfín nariz de botella?","La orca","El delfín","Son iguales","Depende del mar"],
+ ["ani","¿Qué animal cambia su piel completa varias veces en su vida?","La serpiente","El gato","La vaca","El pez"],
+ ["ani","¿Qué tiburón es famoso por la película \"Tiburón\"?","Tiburón blanco","Tiburón martillo","Tiburón tigre","Tiburón ballena"],
+ ["ani","¿Qué animal pone los huevos más grandes del mundo?","El avestruz","El cocodrilo","La gallina","El emú"],
+ ["ani","¿Qué ave pequeña bate sus alas tan rápido que zumba?","El colibrí","El gorrión","El canario","La golondrina"],
+ ["ani","¿Qué mamífero acuático de los ríos de Honduras se parece a una foca pequeña?","La nutria","El manatí","El castor","El delfín"],
+ ["tec","¿Quién cofundó Microsoft?","Bill Gates","Steve Jobs","Mark Zuckerberg","Elon Musk"],
+ ["tec","¿Quién creó Facebook?","Mark Zuckerberg","Bill Gates","Jeff Bezos","Larry Page"],
+ ["tec","¿Qué empresa fabrica el iPhone?","Apple","Samsung","Google","Huawei"],
+ ["tec","¿Qué significa \"www\" en las páginas de internet?","World Wide Web","World Web Wide","Web World Wide","Wide World Web"],
+ ["tec","¿Qué red social de videos cortos es de origen chino?","TikTok","Instagram","Snapchat","YouTube"],
+ ["tec","¿Qué empresa es dueña de WhatsApp?","Meta","Google","Microsoft","Apple"],
+ ["tec","¿Cuántos bits tiene un byte?","8","4","16","10"],
+ ["tec","¿Qué empresa desarrolla el sistema Android?","Google","Apple","Samsung","Microsoft"],
+ ["tec","¿Qué empresa fabrica la consola PlayStation?","Sony","Nintendo","Microsoft","Sega"],
+ ["tec","¿Qué empresa fabrica la consola Xbox?","Microsoft","Sony","Nintendo","Apple"],
+ ["tec","¿Qué personaje de Nintendo es un fontanero?","Mario","Link","Sonic","Pac-Man"],
+ ["tec","¿Quién dirige las empresas Tesla y SpaceX?","Elon Musk","Jeff Bezos","Tim Cook","Bill Gates"],
+ ["tec","¿Qué empresa creó el buscador más usado del mundo?","Google","Yahoo","Microsoft","Amazon"],
+ ["tec","¿Qué significa \"Wi-Fi\" en la práctica?","Internet sin cables","Un tipo de cable","Un antivirus","Un teléfono"],
+ ["tec","¿Qué significa \"PC\"?","Computadora personal","Programa central","Pantalla de color","Puerto de conexión"],
+ ["tec","¿Qué empresa creó Windows?","Microsoft","Apple","IBM","Google"],
+ ["tec","¿Qué sistema operativo usan las computadoras Mac?","macOS","Windows","Android","Linux"],
+ ["tec","¿Qué sistema operativo usa el iPhone?","iOS","Android","Windows Phone","HarmonyOS"],
+ ["tec","¿Quién fundó Apple junto a Steve Wozniak?","Steve Jobs","Bill Gates","Larry Page","Jeff Bezos"],
+ ["tec","¿Quién fundó Amazon?","Jeff Bezos","Elon Musk","Bill Gates","Jack Ma"],
+ ["tec","¿Quién fundó Alibaba?","Jack Ma","Jeff Bezos","Pony Ma","Masayoshi Son"],
+ ["tec","¿Quiénes fundaron Google?","Larry Page y Sergey Brin","Bill Gates y Paul Allen","Steve Jobs y Steve Wozniak","Mark Zuckerberg y Eduardo Saverin"],
+ ["tec","¿Qué empresa es dueña de YouTube?","Google","Meta","Microsoft","Amazon"],
+ ["tec","¿Qué empresa es dueña de Instagram?","Meta","Google","X","Snap"],
+ ["tec","¿Cómo se llama hoy la red social que antes era Twitter?","X","Threads","Bluesky","Tweet"],
+ ["tec","¿Qué empresa creó ChatGPT?","OpenAI","Google","Meta","Microsoft"],
+ ["tec","¿Qué empresa creó el asistente Claude?","Anthropic","OpenAI","Google","Apple"],
+ ["tec","¿Cómo se llama el asistente de voz de Apple?","Siri","Alexa","Cortana","Bixby"],
+ ["tec","¿Cómo se llama el asistente de voz de Amazon?","Alexa","Siri","Cortana","Bixby"],
+ ["tec","¿Qué empresa fabrica los teléfonos Galaxy?","Samsung","LG","Sony","Motorola"],
+ ["tec","¿De qué país es Samsung?","Corea del Sur","Japón","China","Taiwán"],
+ ["tec","¿De qué país es Huawei?","China","Corea del Sur","Japón","Taiwán"],
+ ["tec","¿De qué país es Nintendo?","Japón","Estados Unidos","Corea del Sur","China"],
+ ["tec","¿Qué consola de Nintendo se usa portátil y conectada a la TV?","Nintendo Switch","Wii","GameCube","Nintendo 64"],
+ ["tec","¿Qué juego consiste en construir con bloques y sobrevivir?","Minecraft","Tetris","Pac-Man","Candy Crush"],
+ ["tec","¿En qué juego caen piezas y hay que completar líneas?","Tetris","Pac-Man","Candy Crush","Space Invaders"],
+ ["tec","¿Qué personaje amarillo come puntos y huye de fantasmas?","Pac-Man","Mario","Kirby","Pikachu"],
+ ["tec","¿Qué Pokémon es amarillo y eléctrico?","Pikachu","Charmander","Bulbasaur","Squirtle"],
+ ["tec","¿Qué personaje de Sega es un erizo azul?","Sonic","Mario","Crash","Spyro"],
+ ["tec","¿Qué saga de videojuegos tiene a Link y a la princesa Zelda?","The Legend of Zelda","Final Fantasy","Metroid","Kingdom Hearts"],
+ ["tec","¿Qué juego de batalla es famoso por construir y por sus bailes?","Fortnite","PUBG","Apex Legends","Call of Duty"],
+ ["tec","¿Cómo se llama hoy el juego de fútbol que antes se llamaba FIFA?","EA Sports FC","eFootball","PES","Rocket League"],
+ ["tec","¿Qué es un virus informático?","Un programa que daña o se copia sin permiso","Un cable roto","Una pantalla dañada","Una red social"],
+ ["tec","¿Qué es el \"phishing\"?","Engañar a alguien para robar sus datos","Pescar en línea","Un videojuego","Una red social"],
+ ["tec","¿Cuál es una contraseña más segura?","Larga, con letras, números y símbolos","Tu fecha de nacimiento","123456","Tu nombre"],
+ ["tec","¿Qué significa \"IA\"?","Inteligencia artificial","Internet avanzado","Interfaz automática","Información actual"],
+ ["tec","¿Qué significa \"GPS\"?","Sistema de Posicionamiento Global","Gran Pantalla Satelital","Grupo de Programas de Software","Guía Personal de Seguridad"],
+ ["tec","¿Qué es \"la nube\" en informática?","Guardar datos en servidores por internet","Un tipo de pantalla","Un virus","Una impresora"],
+ ["tec","¿Qué empresa ofrece el servicio iCloud?","Apple","Google","Microsoft","Amazon"],
+ ["tec","¿Qué empresa ofrece OneDrive?","Microsoft","Google","Apple","Dropbox"],
+ ["tec","¿En qué país nacieron los emojis?","Japón","Estados Unidos","Corea del Sur","China"],
+ ["tec","¿Qué red social es famosa por fotos e historias?","Instagram","LinkedIn","Wikipedia","Reddit"],
+ ["tec","¿Qué red social sirve para contactos de trabajo?","LinkedIn","TikTok","Snapchat","Pinterest"],
+ ["tec","¿Qué plataforma es famosa por series y películas?","Netflix","Spotify","Zoom","Waze"],
+ ["tec","¿Qué plataforma es famosa por música en streaming?","Spotify","Netflix","Uber","Airbnb"],
+ ["tec","¿De qué país es Spotify?","Suecia","Estados Unidos","Reino Unido","Alemania"],
+ ["tec","¿Qué app se usa para pedir un carro con chofer?","Uber","Waze","Zoom","Shazam"],
+ ["tec","¿Qué app reconoce canciones al escucharlas?","Shazam","Spotify","Waze","Duolingo"],
+ ["tec","¿Qué app enseña idiomas con un búho verde?","Duolingo","Babbel","Busuu","Memrise"],
+ ["tec","¿Qué app de mapas avisa del tráfico con ayuda de los usuarios?","Waze","Uber","Zoom","Shazam"],
+ ["tec","¿Qué app de videollamadas se hizo famosa en la pandemia?","Zoom","Waze","Shazam","Tinder"],
+ ["tec","¿Qué enciclopedia en línea puede editar cualquiera?","Wikipedia","Encarta","Britannica","Larousse"],
+ ["tec","¿Qué empresa hacía la enciclopedia Encarta?","Microsoft","Apple","Google","IBM"],
+ ["tec","¿Qué es el hardware?","Las partes físicas de la computadora","Los programas","Internet","Las contraseñas"],
+ ["tec","¿Qué es el software?","Los programas de la computadora","Las piezas físicas","Los cables","La pantalla"],
+ ["tec","¿Qué pieza se considera el \"cerebro\" de la computadora?","El procesador","El monitor","El teclado","El ratón"],
+ ["tec","¿Qué es más grande, un terabyte o un gigabyte?","Un terabyte","Un gigabyte","Son iguales","Un megabyte"],
+ ["tec","¿Qué atajo de teclado copia en Windows?","Ctrl + C","Ctrl + V","Ctrl + X","Ctrl + Z"],
+ ["tec","¿Qué atajo de teclado pega en Windows?","Ctrl + V","Ctrl + C","Ctrl + P","Ctrl + A"],
+ ["tec","¿Qué atajo deshace la última acción?","Ctrl + Z","Ctrl + Y","Ctrl + X","Ctrl + Q"],
+ ["tec","¿Qué símbolo se usa en los correos electrónicos?","@","#","&","%"],
+ ["tec","¿Cómo se llama el símbolo @?","Arroba","Numeral","Asterisco","Ampersand"],
+ ["tec","¿Qué matemático británico descifró códigos nazis y es pionero de la computación?","Alan Turing","Charles Darwin","Stephen Hawking","Isaac Newton"],
+ ["tec","¿Qué empresa fabrica los procesadores Core i7?","Intel","AMD","Apple","Qualcomm"],
+ ["tec","¿Qué empresa fabrica las tarjetas gráficas GeForce?","Nvidia","AMD","Intel","Sony"],
+ ["tec","¿Qué empresa lanza los cohetes reutilizables Falcon 9?","SpaceX","NASA","Blue Origin","Boeing"],
+ ["tec","¿Cuál es la agencia espacial de Estados Unidos?","NASA","ESA","Roscosmos","JAXA"],
+ ["tec","¿Qué telescopio espacial se lanzó en 2021?","James Webb","Hubble","Kepler","Spitzer"],
+ ["tec","¿Qué empresa hizo la consola Game Boy?","Nintendo","Sega","Sony","Atari"],
+ ["tec","¿En qué año salió el primer iPhone?","2007","2005","2010","2001"],
+ ["tec","¿En qué año se fundó Facebook?","2004","2008","2000","2010"],
+ ["tec","¿En qué año se fundó Google?","1998","2004","1995","2001"],
+ ["tec","¿En qué año nació YouTube?","2005","2009","2001","2012"],
+ ["tec","¿En qué año se lanzó WhatsApp?","2009","2004","2012","2015"],
+ ["tec","¿Qué es un influencer?","Alguien con muchos seguidores que influye en redes","Un tipo de virus","Un programador","Un aparato"],
+ ["tec","¿Qué significa \"LOL\" en internet?","Reírse a carcajadas","Te quiero","Nos vemos","Llámame"],
+ ["tec","¿Qué significa \"DM\" en redes sociales?","Mensaje directo","Me gusta","Comentario","Publicación"],
+ ["tec","¿Qué es el spam?","Correo o mensajes no deseados","Un antivirus","Una red social","Un buscador"],
+ ["tec","¿Qué es un código QR?","Un código de cuadritos que se escanea con el celular","Un virus","Un cable","Una contraseña"],
+ ["tec","¿Qué tecnología conecta audífonos al celular sin cables a corta distancia?","Bluetooth","GPS","Ethernet","HDMI"],
+ ["tec","¿Qué cable lleva video y audio a la TV en alta definición?","HDMI","Ethernet","Cable telefónico","Cable de corriente"],
+ ["tec","¿Quién creó el núcleo del sistema Linux?","Linus Torvalds","Bill Gates","Steve Wozniak","Tim Berners-Lee"],
+ ["tec","¿Quién inventó la World Wide Web?","Tim Berners-Lee","Bill Gates","Steve Jobs","Linus Torvalds"],
+ ["tec","¿Qué empresa hace el navegador Chrome?","Google","Microsoft","Apple","Mozilla"],
+ ["tec","¿Qué empresa hace el navegador Safari?","Apple","Google","Microsoft","Mozilla"],
+ ["tec","¿Qué animal aparece en el logo de Firefox?","Un zorro","Un lobo","Un gato","Un perro"],
+ ["tec","¿Qué fruta es el logo de Apple?","Manzana","Pera","Naranja","Cereza"],
+ ["tec","¿Qué pájaro era el logo de Twitter?","Un pájaro azul","Un búho","Un águila","Un loro"],
+ ["tec","¿Qué red social usa un fantasma como logo?","Snapchat","TikTok","Pinterest","Reddit"],
+ ["tec","¿Qué se usa para mover el cursor en la computadora?","El ratón","El parlante","El micrófono","La impresora"],
+ ["tec","¿Qué aparato pasa documentos de papel a la computadora?","El escáner","La impresora","El monitor","El parlante"],
+ ["tec","¿Qué empresa hizo la primera consola PlayStation en 1994?","Sony","Nintendo","Sega","Microsoft"]
+];
+const CATS = {gen:'Cultura general', hn:'Honduras catracho', dep:'Fútbol y deportes', mus:'Música y películas', geo:'Geografía', his:'Historia', cie:'Ciencia', com:'Comida y tragos', ani:'Animales', tec:'Tecnología', mel:'Adivina la melodía', casa:'De la casa'};
+/* Canciones para la ronda con DJ: [título, artista]. El juego no reproduce estas canciones; las pone el DJ. */
+const SONGS = [
+ ['Despacito','Luis Fonsi y Daddy Yankee'],['Gasolina','Daddy Yankee'],['La Bicicleta','Carlos Vives y Shakira'],['Hips Don\'t Lie','Shakira'],
+ ['Waka Waka','Shakira'],['La Tortura','Shakira y Alejandro Sanz'],['Bailando','Enrique Iglesias'],['Vivir mi vida','Marc Anthony'],
+ ['Propuesta indecente','Romeo Santos'],['Obsesión','Aventura'],['Tusa','Karol G y Nicki Minaj'],['Provenza','Karol G'],
+ ['Bichota','Karol G'],['Dákiti','Bad Bunny y Jhay Cortez'],['Tití me preguntó','Bad Bunny'],['Me porto bonito','Bad Bunny y Chencho Corleone'],
+ ['Danza Kuduro','Don Omar y Lucenzo'],['Rakata','Wisin & Yandel'],['Felices los 4','Maluma'],['Hawái','Maluma'],
+ ['Mi gente','J Balvin y Willy William'],['Échame la culpa','Luis Fonsi y Demi Lovato'],['Sopa de caracol','Banda Blanca'],['Macarena','Los del Río'],
+ ['Suavemente','Elvis Crespo'],['La vida es un carnaval','Celia Cruz'],['Pedro Navaja','Rubén Blades'],['Burbujas de amor','Juan Luis Guerra'],
+ ['La bilirrubina','Juan Luis Guerra'],['Ojalá que llueva café','Juan Luis Guerra'],['Rayando el sol','Maná'],['Clavado en un bar','Maná'],
+ ['De música ligera','Soda Stereo'],['Persiana americana','Soda Stereo'],['La flaca','Jarabe de Palo'],['Mi primer millón','Bacilos'],
+ ['El triste','José José'],['Volver, volver','Vicente Fernández'],['Querida','Juan Gabriel'],
+ ['La incondicional','Luis Miguel'],['Ahora te puedes marchar','Luis Miguel'],['Bohemian Rhapsody','Queen'],['We Will Rock You','Queen'],
+ ['Billie Jean','Michael Jackson'],['Thriller','Michael Jackson'],['Hotel California','Eagles'],['Sweet Child O\' Mine','Guns N\' Roses'],
+ ['Livin\' on a Prayer','Bon Jovi'],['Smells Like Teen Spirit','Nirvana'],['Shape of You','Ed Sheeran'],['Uptown Funk','Mark Ronson y Bruno Mars'],
+ ['Blinding Lights','The Weeknd'],['Rolling in the Deep','Adele'],['Happy','Pharrell Williams'],['Bad Romance','Lady Gaga'],
+ ['Dancing Queen','ABBA'],['I Will Survive','Gloria Gaynor'],['La gozadera','Gente de Zona y Marc Anthony'],['Despechá','Rosalía'],
+ ['Pepas','Farruko'],['Ella baila sola','Eslabón Armado y Peso Pluma'],['La Bachata','Manuel Turizo'],['Corazón partío','Alejandro Sanz'],
+ ['Livin\' la vida loca','Ricky Martin'],['La copa de la vida','Ricky Martin'],['María','Ricky Martin'],['Chantaje','Shakira y Maluma'],
+ ['Bésame mucho','Consuelo Velázquez'],['Cumbia sobre el río','Celso Piña'],['Tiburón','Proyecto Uno'],['Oye cómo va','Santana']
+];
+/* Melodías de dominio público que toca la TV: [nombre, notas, pulsos por minuto] */
+const MELODIES = [
+ ['Brilla, brilla, estrellita','C4:1 C4:1 G4:1 G4:1 A4:1 A4:1 G4:2 F4:1 F4:1 E4:1 E4:1 D4:1 D4:1 C4:2',110],
+ ['Cumpleaños feliz','G4:.75 G4:.25 A4:1 G4:1 C5:1 B4:2 G4:.75 G4:.25 A4:1 G4:1 D5:1 C5:2',110],
+ ['Himno de la Alegría (Beethoven)','E4:1 E4:1 F4:1 G4:1 G4:1 F4:1 E4:1 D4:1 C4:1 C4:1 D4:1 E4:1 E4:1.5 D4:.5 D4:2',120],
+ ['Para Elisa (Beethoven)','E5:.5 D#5:.5 E5:.5 D#5:.5 E5:.5 B4:.5 D5:.5 C5:.5 A4:1.5 C4:.5 E4:.5 A4:.5 B4:1.5 E4:.5 G#4:.5 B4:.5 C5:1.5 E4:.5 E5:.5 D#5:.5 E5:.5 D#5:.5 E5:.5 B4:.5 D5:.5 C5:.5 A4:1.5',130],
+ ['Jingle Bells (Navidad, Navidad)','E4:1 E4:1 E4:2 E4:1 E4:1 E4:2 E4:1 G4:1 C4:1.5 D4:.5 E4:4 F4:1 F4:1 F4:1.5 F4:.5 F4:1 E4:1 E4:1 E4:.5 E4:.5 E4:1 D4:1 D4:1 E4:1 D4:2 G4:2',170],
+ ['Quinta Sinfonía (Beethoven)','R:.5 G4:.5 G4:.5 G4:.5 D#4:3 R:.5 F4:.5 F4:.5 F4:.5 D4:4',100],
+ ['La Cucaracha','C4:.5 C4:.5 C4:.5 F4:1.5 A4:1 R:1 C4:.5 C4:.5 C4:.5 F4:1.5 A4:2 R:.5 F4:1 F4:.5 E4:.5 E4:.5 D4:.5 D4:.5 C4:2',140],
+ ['Noche de Paz','G4:1.5 A4:.5 G4:1 E4:3 G4:1.5 A4:.5 G4:1 E4:3 D5:2 D5:1 B4:3 C5:2 C5:1 G4:3',110],
+ ['Marcha nupcial (Wagner)','C4:1 F4:.75 F4:.25 F4:2 C4:1 G4:.75 E4:.25 F4:2',80],
+ ['Martinillo','C4:1 D4:1 E4:1 C4:1 C4:1 D4:1 E4:1 C4:1 E4:1 F4:1 G4:2 E4:1 F4:1 G4:2 G4:.5 A4:.5 G4:.5 F4:.5 E4:1 C4:1 G4:.5 A4:.5 G4:.5 F4:.5 E4:1 C4:1 C4:1 G3:1 C4:2 C4:1 G3:1 C4:2',130],
+ ['El viejo McDonald tenía una granja','G4:1 G4:1 G4:1 D4:1 E4:1 E4:1 D4:2 B4:1 B4:1 A4:1 A4:1 G4:2',130],
+ ['Mary tenía un corderito','E4:1 D4:1 C4:1 D4:1 E4:1 E4:1 E4:2 D4:1 D4:1 D4:2 E4:1 G4:1 G4:2',130],
+ ['El puente de Londres','G4:1.5 A4:.5 G4:1 F4:1 E4:1 F4:1 G4:2 D4:1 E4:1 F4:2 E4:1 F4:1 G4:2',130],
+ ['Marcha turca (Mozart)','B4:.5 A4:.5 G#4:.5 A4:.5 C5:2 D5:.5 C5:.5 B4:.5 C5:.5 E5:2 F5:.5 E5:.5 D#5:.5 E5:.5 B5:.5 A5:.5 G#5:.5 A5:.5 B5:.5 A5:.5 G#5:.5 A5:.5 C6:2',140],
+ ['Canción de cuna (Brahms)','E4:.5 E4:.5 G4:2 E4:.5 E4:.5 G4:2 E4:.5 G4:.5 C5:1 B4:1.5 A4:.5 A4:1 G4:1',100]
+];;
+const SHAPES = ['▲','◆','●','■'];
+const PREFIX = 'profugos-trivia-';
+const app = document.getElementById('app');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ls = { get(k){ try{ return localStorage.getItem(k) }catch(e){ return null } }, set(k,v){ try{ localStorage.setItem(k,v) }catch(e){} } };
+const shuffle = a => { a = a.slice(); for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]] } return a };
+/* ---------- Sonido: todo se genera aquí, sin archivos de audio ---------- */
+const SFX = (() => {
+  let ctx = null, master, musicBus, sfxBus, noiseBuf, timer = null, step = 0, nextT = 0, music = false;
+  let on = ls.get('pf_sound') !== 'off';
+  function ensure(){
+    if (!ctx){
+      const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+      try{ ctx = new AC() }catch(e){ return null }
+      master = ctx.createGain(); master.gain.value = on ? 1 : 0; master.connect(ctx.destination);
+      musicBus = ctx.createGain(); musicBus.gain.value = 0.2; musicBus.connect(master);
+      sfxBus = ctx.createGain(); sfxBus.gain.value = 0.9; sfxBus.connect(master);
+      noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+      const d = noiseBuf.getChannelData(0); for (let i=0;i<d.length;i++) d[i] = Math.random()*2-1;
+      // desbloqueo para iPhone
+      try{ const s = ctx.createBufferSource(); s.buffer = ctx.createBuffer(1,1,22050); s.connect(ctx.destination); s.start(0) }catch(e){}
+    }
+    if (ctx.state === 'suspended'){ try{ ctx.resume() }catch(e){} }
+    return ctx;
+  }
+  function tone(f, t, d, type, g, dest, fEnd){
+    const o = ctx.createOscillator(), a = ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    if (fEnd) o.frequency.exponentialRampToValueAtTime(fEnd, t + d);
+    a.gain.setValueAtTime(0.0001, t); a.gain.exponentialRampToValueAtTime(g, t + 0.012); a.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.connect(a); a.connect(dest); o.start(t); o.stop(t + d + 0.05);
+  }
+  function noise(t, d, g, freq, q, dest){
+    const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), a = ctx.createGain();
+    s.buffer = noiseBuf; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q || 1;
+    a.gain.setValueAtTime(g, t); a.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    s.connect(f); f.connect(a); a.connect(dest); s.start(t, Math.random()*0.5); s.stop(t + d + 0.02);
+  }
+  /* Música de fondo: ritmo de dembow suave, 98 BPM, Am – F – C – G */
+  const SPB = 60/98/4;
+  const CH = [[110,[220,261.63,329.63]],[87.31,[174.61,220,261.63]],[130.81,[261.63,329.63,392]],[98,[196,246.94,293.66]]];
+  const LEAD = [659.25,0,587.33,523.25,0,440,0,523.25, 587.33,0,523.25,440,0,392,0,440];
+  function schedule(){
+    while (nextT < ctx.currentTime + 0.15){
+      const s = step % 16, bar = Math.floor(step/16) % 4, [root, triad] = CH[bar], t = nextT;
+      if (s % 4 === 0) tone(120, t, 0.18, 'sine', 0.9, musicBus, 45);
+      if ([3,6,11,14].includes(s)) noise(t, 0.09, 0.5, 1800, 0.8, musicBus);
+      if (s % 2 === 0) noise(t, 0.03, 0.18, 8000, 1, musicBus);
+      if ([0,3,8,11].includes(s)) tone(root, t, SPB*2.6, 'triangle', 0.55, musicBus);
+      if ([2,10].includes(s)) triad.forEach(f => tone(f, t, 0.22, 'square', 0.05, musicBus));
+      if (Math.floor(step/64) % 2 === 1 && LEAD[s]) tone(LEAD[s] * (bar===1?0.84:1), t, 0.2, 'triangle', 0.12, musicBus);
+      nextT += SPB; step++;
+    }
+  }
+  return {
+    get on(){ return on },
+    unlock(){ ensure() },
+    startMusic(){ if (!ensure() || music) return; music = true; step = 0; nextT = ctx.currentTime + 0.1; timer = setInterval(schedule, 25) },
+    stopMusic(){ music = false; clearInterval(timer) },
+    duck(x){ if (!ctx) return; musicBus.gain.setTargetAtTime(x ? 0.07 : 0.2, ctx.currentTime, 0.15) },
+    toggle(){ on = !on; ls.set('pf_sound', on ? 'on' : 'off'); if (ensure()) master.gain.setTargetAtTime(on ? 1 : 0, ctx.currentTime, 0.05); return on },
+    ding(){ if (!ensure()) return; const t = ctx.currentTime + 0.02;
+      tone(1046.5, t, 0.16, 'triangle', 0.5, sfxBus); tone(1568, t + 0.09, 0.5, 'triangle', 0.5, sfxBus);
+      tone(2093, t + 0.09, 0.45, 'sine', 0.22, sfxBus); tone(3136, t + 0.14, 0.3, 'sine', 0.08, sfxBus) },
+    laugh(){ if (!ensure()) return; const t0 = ctx.currentTime + 0.02;
+      const out = ctx.createGain(); out.gain.value = 0.9; out.connect(sfxBus);
+      const f1 = ctx.createBiquadFilter(), f2 = ctx.createBiquadFilter();
+      f1.type = f2.type = 'bandpass'; f1.frequency.value = 780; f2.frequency.value = 1180; f1.Q.value = 5; f2.Q.value = 6;
+      f1.connect(out); f2.connect(out);
+      const n = 7;
+      for (let i = 0; i < n; i++){
+        const t = t0 + i*0.16, last = i === n-1, d = last ? 0.45 : 0.11;
+        const p = 330 - i*16;
+        noise(t, 0.05, 0.25, 2600, 2, out);
+        const o = ctx.createOscillator(), a = ctx.createGain(), v = ctx.createOscillator(), vg = ctx.createGain();
+        o.type = 'sawtooth'; o.frequency.setValueAtTime(p*1.08, t + 0.03); o.frequency.exponentialRampToValueAtTime(p*(last?0.7:0.92), t + 0.03 + d);
+        v.frequency.value = 9; vg.gain.value = last ? 14 : 5; v.connect(vg); vg.connect(o.frequency);
+        a.gain.setValueAtTime(0.0001, t + 0.03); a.gain.exponentialRampToValueAtTime(0.9, t + 0.05); a.gain.exponentialRampToValueAtTime(0.0001, t + 0.03 + d);
+        o.connect(a); a.connect(f1); a.connect(f2);
+        o.start(t + 0.03); v.start(t + 0.03); o.stop(t + 0.1 + d); v.stop(t + 0.1 + d);
+      } },
+    melody(notes, bpm){ if (!ensure()) return 0; const spb = 60/(bpm||110); let t = ctx.currentTime + 0.1;
+      notes.trim().split(/\s+/).forEach(tok => { const [n, d] = tok.split(':'); const dur = parseFloat(d) * spb;
+        const m = n.match(/^([A-G])(#?)(\d)$/);
+        if (m){ const midi = (+m[3] + 1)*12 + {C:0,D:2,E:4,F:5,G:7,A:9,B:11}[m[1]] + (m[2] ? 1 : 0); const f = 440 * Math.pow(2, (midi-69)/12);
+          tone(f, t, Math.max(0.25, dur*0.95), 'triangle', 0.55, sfxBus); tone(f*2, t, Math.max(0.2, dur*0.6), 'sine', 0.12, sfxBus) }
+        t += dur });
+      return t - ctx.currentTime },
+    tick(final){ if (!ensure()) return; tone(final ? 1320 : 990, ctx.currentTime + 0.01, 0.07, 'square', 0.12, sfxBus) },
+    fanfare(){ if (!ensure()) return; const t = ctx.currentTime + 0.05;
+      [523.25,659.25,783.99,1046.5].forEach((f,i) => tone(f, t + i*0.13, 0.3, 'square', 0.12, sfxBus));
+      [523.25,659.25,783.99,1046.5].forEach(f => tone(f, t + 0.6, 1.1, 'triangle', 0.18, sfxBus)) }
+  };
+})();
+const soundBtn = () => `<button class="btn" data-act="sound" id="soundBtn" aria-pressed="${SFX.on}">${SFX.on ? '♪ Sonido activado' : '♪ Sonido apagado'}</button>`;
+const topBar = right => `<div class="top"><div class="brand">Prófugos <b>Trivia</b></div><div class="row">${soundBtn()}${right||''}</div></div>`;
+let wakeLock = null;
+async function keepAwake(){ try{ wakeLock = await navigator.wakeLock.request('screen') }catch(e){} }
+
+/* ---------- Inicio ---------- */
+function renderHome(){
+  app.innerHTML = `${topBar()}
+  <div class="hero">
+    <div class="wanted">
+      <div class="eyebrow">Trivia en vivo · Prófugos</div>
+      <h1 class="display">¿Quién es el <span>más buscado</span> de la noche?</h1>
+      <p class="muted" style="max-width:52ch;margin:0">Las preguntas salen en la pantalla del bar. Cada mesa escanea el QR, responde desde su celular y gana puntos por acertar rápido.</p>
+      <div class="row"><button class="btn primary big" data-act="setup">Abrir pantalla del bar</button></div>
+    </div>
+    <form class="panel stack" id="joinForm">
+      <div class="eyebrow">¿Eres jugador?</div>
+      <h2 class="display" style="font-size:40px">Únete a la partida</h2>
+      <div class="field"><label for="jcode">Código de la sala</label><input type="text" id="jcode" inputmode="numeric" maxlength="4" placeholder="Ej. 4821" autocomplete="off"></div>
+      <div class="field"><label for="jname">Nombre de tu mesa o equipo</label><input type="text" id="jname" maxlength="24" placeholder="Ej. Mesa 7 · Los Fugados"></div>
+      <button class="btn primary big" type="submit">Entrar</button>
+    </form>
+  </div>`;
+  const n = ls.get('pf_name'); if (n) document.getElementById('jname').value = n;
+}
+
+/* ================= HOST (pantalla del bar) ================= */
+const PRIZE_DEFAULT = { round:'Cubetazo nacional', final:'Torre internacional' };
+const PRIZE_MEM = {};
+function prize(k){ const v = k in PRIZE_MEM ? PRIZE_MEM[k] : (ls.get('pf_prize_'+k) || ''); return v.trim() || PRIZE_DEFAULT[k] }
+const DEF_THEMES = ['gen','hn','dep','mus','mix','his','geo'];
+function loadThemes(){ try{ const t = JSON.parse(ls.get('pf_themes') || 'null'); if (Array.isArray(t) && t.length) return t }catch(e){} return DEF_THEMES.slice() }
+function saveThemes(){ ls.set('pf_themes', JSON.stringify(H.cfg.themes)) }
+function themeName(k){ return k === 'mix' ? 'Mezcla de todo' : (CATS[k] || 'Mezcla de todo') }
+const H = { cfg:{cats:new Set(['gen','hn','dep','mus','geo','his','cie','com','ani','tec','mel']), count:20, time:20, round:5, rounds:5, per:(+ls.get('pf_per') || 5), themes:loadThemes(), roundPrize: ls.get('pf_rprize') === 'on'}, teams:[], qs:[], qi:-1, phase:'setup', answers:new Map(), manualOk:new Set(), peer:null, peerOk:null, code:'', tick:null };
+
+function customQs(){
+  const raw = ls.get('pf_custom') || '';
+  return raw.split('\n').map(l => l.split('|').map(s => s.trim()).filter(Boolean)).filter(p => p.length >= 3).map(p => ['casa', p[0], ...p.slice(1,5)]);
+}
+function pool(){ return BANK.concat(customQs()).filter(q => H.cfg.cats.has(q[0])) }
+function uniq(a){ return [...new Set(a)] }
+function songQ(i){
+  const s = SONGS[i], f = Math.random() < 0.35 ? 1 : 0;
+  const names = v => v.split(/ y | & /).map(x => x.trim().toLowerCase());
+  const clash = v => f === 1 && names(v).some(n => names(s[1]).includes(n));
+  const wrong = shuffle(uniq(SONGS.filter((x,j) => j !== i).map(x => x[f])).filter(v => v !== s[f] && !clash(v))).slice(0,3);
+  const opts = shuffle([s[f], ...wrong]);
+  return {cat:'can', kind:'dj', song:{title:s[0], artist:s[1]}, text: f ? '¡Que suene! ¿Quién canta esta canción?' : '¡Que suene! ¿Cómo se llama esta canción?', opts, ci:opts.indexOf(s[f])};
+}
+function melQ(i){
+  const m = MELODIES[i];
+  const opts = shuffle([m[0], ...shuffle(MELODIES.filter((x,j) => j !== i).map(x => x[0])).slice(0,3)]);
+  return {cat:'mel', kind:'mel', notes:m[1], bpm:m[2], text:'Escuchen la melodía. ¿Cuál es?', opts, ci:opts.indexOf(m[0])};
+}
+function catPool(k){
+  const all = BANK.concat(customQs());
+  const out = (k === 'mix' ? all : all.filter(q => q[0] === k)).map(q => ({key:'b:' + q[1], make:() => { const opts = shuffle(q.slice(2).map((t,i) => ({t, ok:i===0}))); return {cat:q[0], text:q[1], opts:opts.map(o => o.t), ci:opts.findIndex(o => o.ok)} }}));
+  if (k === 'mix' || k === 'mel') MELODIES.forEach((_,i) => out.push({key:'m:' + i, make:() => melQ(i)}));
+  return out;
+}
+function buildQs(){
+  const used = new Set(), out = [];
+  for (let r = 0; r < H.cfg.rounds; r++){
+    const k = H.cfg.themes[r] || 'mix';
+    let items = shuffle(catPool(k).filter(it => !used.has(it.key))).slice(0, H.cfg.per);
+    if (items.length < H.cfg.per) items = items.concat(shuffle(catPool('mix').filter(it => !used.has(it.key) && !items.includes(it))).slice(0, H.cfg.per - items.length));
+    items.forEach(it => { used.add(it.key); const q = it.make(); q.round = r + 1; q.theme = k; out.push(q) });
+  }
+  H.R = H.cfg.rounds;
+  return out;
+}
+function roundInfo(i){ const q = H.qs[i]; const inRound = H.qs.filter(x => x.round === q.round); return {n:q.round, pos:inRound.indexOf(q) + 1, of:inRound.length} }
+function posLabel(){ const r = roundInfo(H.qi); return `Ronda ${r.n} de ${H.R} · Pregunta ${r.pos} de ${r.of}` }
+function nextStep(){
+  const nq = H.qs[H.qi + 1];
+  if (!nq) return renderEnd();
+  if (H.qi < 0 || nq.round !== H.qs[H.qi].round) return renderRoundIntro(nq.round);
+  startQuestion();
+}
+function renderRoundIntro(n){
+  H.phase = 'intro';
+  const first = H.qs.find(q => q.round === n), count = H.qs.filter(q => q.round === n).length, name = themeName(first.theme);
+  H.teams.forEach(t => { if (!t.manual) send(t, {t:'round', n, total:H.R, name}) });
+  SFX.startMusic(); SFX.duck(false); SFX.ding();
+  const r = ranked();
+  app.innerHTML = `${topBar()}
+  <div class="center" style="gap:18px">
+    <div class="eyebrow">Ronda ${n} de ${H.R}</div>
+    <h1 class="display" style="font-size:clamp(56px,10vw,150px)">${esc(name)}</h1>
+    <p class="muted" style="margin:0;font-size:20px">${count} preguntas · ${H.cfg.time} segundos cada una · ${H.cfg.roundPrize ? `la mesa que más puntos sume en la ronda se lleva ${esc(prize('round'))}` : `al final, el mayor puntaje se lleva ${esc(prize('final'))}`}</p>
+    ${n > 1 && r.length ? `<p style="margin:0;font-size:20px">Va ganando <strong style="color:var(--amber)">${esc(r[0].name)}</strong> con ${r[0].score.toLocaleString('es-HN')} pts</p>` : ''}
+    <button class="btn primary big" data-act="roundgo">Empezar ronda ${n}</button>
+  </div>`;
+}
+function djUrl(){ return location.href.split('#')[0].split('?')[0] + '?sala=' + H.code + '&dj=1' }
+function djState(){
+  const cur = H.qs[H.qi], live = H.phase === 'question' && cur && cur.kind === 'dj';
+  const nx = H.qs.slice(H.qi + 1).find(q => q.kind === 'dj');
+  return {t:'dj', now: live ? cur.song : null, next: nx ? nx.song : null};
+}
+function djBroadcast(){ (H.djs||[]).forEach(c => { if (c.open){ try{ c.send(djState()) }catch(e){} } }) }
+
+function renderSetup(){
+  H.phase = 'setup';
+  const counts = {}; BANK.concat(customQs()).forEach(q => counts[q[0]] = (counts[q[0]]||0)+1); counts.can = SONGS.length; counts.mel = MELODIES.length;
+  const avail = pool().length + (H.cfg.cats.has('can') ? SONGS.length : 0) + (H.cfg.cats.has('mel') ? MELODIES.length : 0);
+  app.innerHTML = `${topBar('<button class="btn" data-act="home">Volver</button>')}
+  <div class="stack" style="max-width:900px;width:100%;margin:0 auto">
+    <div><div class="eyebrow">Preparar partida</div><h1 class="display" style="font-size:clamp(40px,6vw,72px)">Arma la trivia de hoy</h1></div>
+    <div class="panel stack">
+      <strong>Número de rondas</strong>
+      <div class="chips">${[3,5,7].map(n => `<button class="chip" data-act="rounds" data-n="${n}" aria-pressed="${H.cfg.rounds===n}">${n} rondas</button>`).join('')}</div>
+      <strong>Preguntas por ronda</strong>
+      <div class="chips">${[5,8,10].map(n => `<button class="chip" data-act="per" data-n="${n}" aria-pressed="${H.cfg.per===n}">${n}</button>`).join('')}</div>
+      <strong>Tema de cada ronda</strong>
+      <div class="prizes">${Array.from({length:H.cfg.rounds}, (_,r) => `<div class="field"><label for="rt${r}">Ronda ${r+1}</label><select id="rt${r}" data-round="${r}">${['mix', ...Object.keys(CATS).filter(k => counts[k])].map(k => `<option value="${k}" ${(H.cfg.themes[r]||'mix')===k?'selected':''}>${esc(themeName(k))}${k==='mix'?'':' (' + counts[k] + ')'}</option>`).join('')}</select></div>`).join('')}</div>
+      <strong>Segundos para responder</strong>
+      <div class="chips">${[15,20,30].map(n => `<button class="chip" data-act="time" data-n="${n}" aria-pressed="${H.cfg.time===n}">${n} s</button>`).join('')}</div>
+      <p class="muted" style="margin:0">Se juegan ${H.cfg.rounds} rondas de ${H.cfg.per} preguntas (${H.cfg.rounds*H.cfg.per} en total). Gana la mesa con más puntos al final.</p>
+    </div>
+    <div class="panel stack">
+      <strong>Premios</strong>
+      <div class="chips"><button class="chip" data-act="rprize" data-n="0" aria-pressed="${!H.cfg.roundPrize}">Solo premio al final</button><button class="chip" data-act="rprize" data-n="1" aria-pressed="${H.cfg.roundPrize}">Premio en cada ronda y al final</button></div>
+      <div class="prizes">
+        ${H.cfg.roundPrize ? `<div class="field"><label for="prRound">Premio para el ganador de cada ronda</label><input type="text" id="prRound" maxlength="40" value="${esc(prize('round'))}"></div>` : ''}
+        <div class="field"><label for="prFinal">Gran premio para el 1.er lugar</label><input type="text" id="prFinal" maxlength="40" value="${esc(prize('final'))}"></div>
+      </div>
+    </div>
+    <details class="panel">
+      <summary><strong>Preguntas de la casa</strong> <span class="muted">(opcional, se guardan en este equipo)</span></summary>
+      <div class="stack" style="margin-top:12px">
+        <p class="muted" style="margin:0">Una por línea: pregunta | respuesta correcta | incorrecta | incorrecta | incorrecta</p>
+        <textarea id="custom" placeholder="¿Cuál es el trago estrella de Prófugos? | La Fugada | Mojito | Michelada | Cuba libre">${esc(ls.get('pf_custom')||'')}</textarea>
+        <div class="row"><button class="btn" data-act="saveCustom">Guardar preguntas</button><span class="muted" id="customMsg"></span></div>
+      </div>
+    </details>
+    <div class="row"><button class="btn primary big" data-act="create">Crear sala</button></div>
+  </div>`;
+}
+
+function hostCreate(){
+  H.qs = buildQs();
+  H.qi = -1; H.teams = []; H.djs = []; H.phase = 'lobby';
+  H.code = String(1000 + Math.floor(Math.random()*9000));
+  SFX.startMusic(); SFX.duck(false);
+  keepAwake(); startPeer(); renderLobby();
+}
+
+function startPeer(){
+  H.peerOk = null;
+  if (typeof Peer === 'undefined'){ H.peerOk = false; return }
+  try{
+    const p = new Peer(PREFIX + H.code, {debug:0});
+    H.peer = p;
+    const fail = setTimeout(() => { if (H.peerOk === null){ H.peerOk = false; if (H.phase==='lobby') renderLobby() } }, 9000);
+    p.on('open', () => { clearTimeout(fail); H.peerOk = true; if (H.phase==='lobby') renderLobby() });
+    p.on('connection', attach);
+    p.on('disconnected', () => { try{ p.reconnect() }catch(e){} });
+    p.on('error', e => {
+      if (e.type === 'unavailable-id'){ clearTimeout(fail); p.destroy(); H.code = String(1000 + Math.floor(Math.random()*9000)); startPeer(); return }
+      if (H.peerOk === null){ clearTimeout(fail); H.peerOk = false; if (H.phase==='lobby') renderLobby() }
+    });
+  }catch(e){ H.peerOk = false }
+}
+
+function send(t, m){ if (t.conn && t.conn.open){ try{ t.conn.send(m) }catch(e){} } }
+function ranked(){ return H.teams.slice().sort((a,b) => b.score - a.score) }
+function rankOf(t){ return ranked().indexOf(t) + 1 }
+function qMsg(){ const q = H.qs[H.qi]; return {t:'q', i:H.qi, total:H.qs.length, label:posLabel(), text:q.text, opts:q.opts, left:Math.max(0, H.qTime*1000 - (Date.now()-H.qStart))} }
+
+function attach(conn){
+  conn.on('data', d => onHostMsg(conn, d));
+  conn.on('close', () => {
+    if (conn.isDJ){ H.djs = (H.djs||[]).filter(c => c !== conn); if (H.phase === 'lobby') renderLobby(); return }
+    const t = H.teams.find(x => x.conn === conn); if (t){ t.online = false; refreshTeams() }
+  });
+}
+function onHostMsg(conn, d){
+  if (!d || typeof d !== 'object') return;
+  if (d.t === 'join' && d.dj){
+    conn.isDJ = true; H.djs = H.djs || []; if (!H.djs.includes(conn)) H.djs.push(conn);
+    try{ conn.send(djState()) }catch(e){}
+    if (H.phase === 'lobby') renderLobby(); return;
+  }
+  if (d.t === 'join'){
+    const name = String(d.name||'').trim().slice(0,24) || 'Mesa sin nombre';
+    let t = H.teams.find(x => !x.manual && x.name.toLowerCase() === name.toLowerCase());
+    if (t){ t.conn = conn; t.online = true }
+    else { t = {id:'t'+Date.now()+Math.random().toString(36).slice(2,6), name, score:0, last:0, conn, online:true, manual:false}; H.teams.push(t) }
+    send(t, {t:'welcome', name:t.name, score:t.score});
+    if (H.phase === 'question' && !H.answers.has(t.id)) send(t, qMsg());
+    refreshTeams(); return;
+  }
+  const t = H.teams.find(x => x.conn === conn); if (!t) return;
+  if (d.t === 'ans' && H.phase === 'question' && d.i === H.qi && !H.answers.has(t.id)){
+    const q = H.qs[H.qi]; const k = Number(d.k);
+    const el = Math.min(1, (Date.now()-H.qStart) / (H.qTime*1000));
+    const ok = k === q.ci;
+    H.answers.set(t.id, {k, ok, pts: ok ? Math.round(1000 - 500*el) : 0});
+    send(t, {t:'got'});
+    const live = H.teams.filter(x => !x.manual && x.online);
+    const a = document.getElementById('answered'); if (a) a.textContent = `${H.answers.size} de ${live.length} mesas respondieron`;
+    if (live.length && live.every(x => H.answers.has(x.id))) closeQuestion();
+  }
+}
+function refreshTeams(){
+  if (H.phase === 'lobby') renderLobby();
+  else if (H.phase === 'question'){ const a = document.getElementById('answered'); if (a) a.textContent = `${H.answers.size} de ${H.teams.filter(x=>!x.manual&&x.online).length} mesas respondieron` }
+}
+
+function renderLobby(){
+  const url = location.href.split('#')[0].split('?')[0] + '?sala=' + H.code;
+  const phones = H.peerOk;
+  app.innerHTML = `${topBar('<button class="btn" data-act="setup">Cambiar ajustes</button>')}
+  <div class="lobby">
+    <div class="panel stack">
+      ${phones === false ? `
+        <div class="eyebrow">Modo pantalla</div>
+        <h2 class="display" style="font-size:44px">Juego con mesas anotadas</h2>
+        <p class="notice" style="margin:0">Los celulares no se pueden conectar desde aquí. Para que las mesas jueguen con el celular, abre esta trivia desde su enlace público (el archivo HTML subido a internet). Mientras, puedes jugar agregando las mesas a mano y marcando quién acertó.</p>
+      ` : `
+        <div class="eyebrow">Escanea para jugar</div>
+        <div class="row" style="align-items:flex-start;gap:24px">
+          <div class="qr" id="qr" aria-label="Código QR para unirse"></div>
+          <div class="stack" style="gap:6px;min-width:0">
+            <span class="muted">Código de sala</span>
+            <div class="code">${H.code}</div>
+            <span class="muted">${phones ? 'Sala abierta. Esperando mesas…' : 'Abriendo sala…'}</span>
+          </div>
+        </div>
+        <div class="link">${esc(url)}</div>
+        ${H.cfg.cats.has('can') ? `<div class="notice" style="font-size:14px"><strong>Enlace para el DJ</strong> (${(H.djs||[]).length ? 'DJ conectado' : 'sin DJ todavía'}): <span class="link" style="color:inherit">${esc(djUrl())}</span></div>` : ''}
+      `}
+      <form class="row" id="manualForm" style="margin-top:auto">
+        <div class="field" style="flex:1 1 220px"><label for="mname">Agregar mesa sin celular</label><input type="text" id="mname" maxlength="24" placeholder="Ej. Mesa 3"></div>
+        <button class="btn" type="submit" style="align-self:flex-end">Agregar</button>
+      </form>
+    </div>
+    <div class="panel stack">
+      <div class="row" style="justify-content:space-between"><h2 class="display" style="font-size:40px">Mesas en juego</h2><span class="pill">${H.teams.length}</span></div>
+      <div class="teams">${H.teams.length ? H.teams.map(t => `<div class="team ${t.online||t.manual?'':'off'}">${t.manual?'':'<span class="dot"></span>'}${esc(t.name)}${t.manual?'<span class="tag">a mano</span>':''}</div>`).join('') : '<p class="muted" style="margin:0">Todavía no hay mesas. Apenas escaneen el QR aparecen aquí.</p>'}</div>
+      <p class="muted" style="margin:0">${H.R} rondas de ${H.cfg.per} preguntas · ${H.cfg.time} segundos cada una</p>
+      <ol class="muted" style="margin:0;padding-left:20px">${Array.from({length:H.R}, (_,i) => `<li>${esc(themeName(H.cfg.themes[i] || 'mix'))}</li>`).join('')}</ol>
+      <div class="row" style="margin-top:auto"><button class="btn primary big" data-act="start" ${H.teams.length?'':'disabled'}>Empezar la trivia</button></div>
+    </div>
+  </div>`;
+  if (phones !== false && typeof QRCode !== 'undefined'){
+    try{ new QRCode(document.getElementById('qr'), {text:url, width:220, height:220, colorDark:'#141110', colorLight:'#f3e9d8', correctLevel:QRCode.CorrectLevel.M}) }catch(e){}
+  }
+}
+
+function startQuestion(){
+  H.qi++;
+  if (H.qi >= H.qs.length) return renderEnd();
+  const q = H.qs[H.qi];
+  H.qTime = H.cfg.time + (q.kind ? 15 : 0);
+  H.phase = 'question'; H.answers = new Map(); H.manualOk = new Set(); H.qStart = Date.now() + (q.kind === 'mel' ? 1500 : 0);
+  H.teams.forEach(t => send(t, qMsg()));
+  djBroadcast();
+  app.innerHTML = `${topBar()}
+  <div class="qbar">
+    <span class="pill">${posLabel()}</span><span class="pill">${CATS[q.cat]}</span>
+    <span class="answered" id="answered">0 de ${H.teams.filter(x=>!x.manual&&x.online).length} mesas respondieron</span>
+    <span class="timer" id="timer">${H.qTime}</span>
+  </div>
+  <div class="track"><i id="bar"></i></div>
+  <div class="qtext">${esc(q.text)}</div>
+  <div class="answers">${q.opts.map((o,i) => `<div class="ans c${i}"><span class="sh">${SHAPES[i]}</span><span>${esc(o)}</span></div>`).join('')}</div>
+  ${q.kind === 'dj' ? `<div class="notice">${(H.djs||[]).some(c => c.open) ? 'El DJ ya tiene la canción en su celular. ¡Que suene!' : 'No hay DJ conectado. Pon la canción tú mismo: toca "Ver canción" solo si nadie está viendo esta pantalla.'} <span id="peek" style="font-weight:800"></span></div>` : ''}
+  <div class="row"><button class="btn" data-act="close">Cerrar pregunta</button>${q.kind === 'mel' ? '<button class="btn" data-act="replay">Repetir melodía</button>' : ''}${q.kind === 'dj' ? '<button class="btn" data-act="peek">Ver canción</button>' : ''}</div>`;
+  clearInterval(H.tick);
+  if (q.kind){ SFX.stopMusic(); if (q.kind === 'mel') setTimeout(() => { if (H.phase === 'question' && H.qs[H.qi] === q) SFX.melody(q.notes, q.bpm) }, 900) }
+  else { SFX.startMusic(); SFX.duck(true) }
+  let lastSec = H.qTime;
+  H.tick = setInterval(() => {
+    const left = H.qTime*1000 - (Date.now()-H.qStart);
+    const tEl = document.getElementById('timer'), b = document.getElementById('bar');
+    const sec = Math.max(0, Math.ceil(left/1000));
+    if (sec !== lastSec){ lastSec = sec; if (sec <= 5 && sec > 0) SFX.tick(sec === 1) }
+    if (tEl) tEl.textContent = Math.min(sec, H.qTime);
+    if (b) b.style.width = Math.max(0, left/(H.qTime*1000))*100 + '%';
+    if (left <= 0) closeQuestion();
+  }, 200);
+}
+
+function closeQuestion(){
+  if (H.phase !== 'question') return;
+  clearInterval(H.tick); H.phase = 'reveal';
+  const q = H.qs[H.qi];
+  H.teams.forEach(t => { const a = H.answers.get(t.id); t.last = a ? a.pts : 0; t.score += t.last });
+  H.teams.forEach(t => { if (t.manual) return; const a = H.answers.get(t.id);
+    send(t, {t:'res', ok:!!(a&&a.ok), answered:!!a, pts:t.last, score:t.score, rank:rankOf(t), n:H.teams.length, correct:q.opts[q.ci]}) });
+  SFX.startMusic(); SFX.duck(false); djBroadcast();
+  const phones = H.teams.filter(x => !x.manual);
+  const anyOk = [...H.answers.values()].some(a => a.ok);
+  const anyFail = phones.some(x => { const a = H.answers.get(x.id); return !a || !a.ok });
+  if (anyOk || !phones.length) SFX.ding();
+  if (phones.length && anyFail) setTimeout(() => SFX.laugh(), anyOk ? 650 : 0);
+  renderReveal();
+}
+
+function renderReveal(){
+  const q = H.qs[H.qi];
+  const counts = q.opts.map((_,i) => [...H.answers.values()].filter(a => a.k === i).length);
+  const manual = H.teams.filter(t => t.manual);
+  const last = H.qi === H.qs.length-1;
+  app.innerHTML = `${topBar()}
+  <div class="qbar"><span class="pill">${posLabel()}</span><span class="pill">${CATS[q.cat]}</span></div>
+  <div class="qtext">${esc(q.text)}</div>
+  ${q.kind === 'dj' ? `<p class="notice" style="margin:0">Sonó <strong>${esc(q.song.title)}</strong> de ${esc(q.song.artist)}</p>` : ''}
+  <div class="answers">${q.opts.map((o,i) => `<div class="ans c${i} ${i===q.ci?'win':'dim'}"><span class="sh">${i===q.ci?'✔':SHAPES[i]}</span><span>${esc(o)}</span><span class="count">${counts[i]}</span></div>`).join('')}</div>
+  ${manual.length ? `<div class="panel manual"><strong>¿Qué mesas sin celular acertaron?</strong>${manual.map(t => `<button class="mchip" data-act="mok" data-id="${t.id}" aria-pressed="${H.manualOk.has(t.id)}">${esc(t.name)}</button>`).join('')}<span class="muted">+750 pts cada una</span></div>` : ''}
+  <div class="row"><button class="btn primary big" data-act="board">${last ? 'Ver ganadores' : 'Ver puntajes'}</button></div>`;
+}
+
+function toggleManual(id){
+  const t = H.teams.find(x => x.id === id); if (!t) return;
+  if (H.manualOk.has(id)){ H.manualOk.delete(id); t.score -= 750; t.last = 0 }
+  else { H.manualOk.add(id); t.score += 750; t.last = 750; SFX.ding() }
+  renderReveal();
+}
+
+function renderBoard(){
+  if (H.qi === H.qs.length-1) return renderEnd();
+  H.phase = 'board';
+  let roundWin = null, roundNo = 0;
+  const cur = roundInfo(H.qi), roundEnd = cur.pos === cur.of;
+  if (roundEnd && H.cfg.roundPrize){
+    roundNo = cur.n;
+    let best = 0;
+    H.teams.forEach(t => { const g = t.score - (t.rb||0); if (g > best){ best = g; roundWin = t } });
+    if (roundWin) roundWin.gainRound = best;
+    H.teams.forEach(t => t.rb = t.score);
+  }
+  H.teams.forEach(t => { if (!t.manual) send(t, {t:'wait', score:t.score, rank:rankOf(t), n:H.teams.length, prize: t === roundWin ? prize('round') : ''}) });
+  const r = ranked().slice(0, 8);
+  app.innerHTML = `${topBar()}
+  ${roundWin ? `<div class="prize"><div class="stack" style="gap:4px;min-width:0"><div class="eyebrow">Ganador de la ronda ${roundNo} · +${roundWin.gainRound.toLocaleString('es-HN')} pts</div><div class="big"><span>${esc(roundWin.name)}</span> se lleva ${esc(prize('round'))}</div></div></div>` : ''}
+  <div style="text-align:center"><div class="eyebrow">${roundEnd ? `Fin de la ronda ${cur.n} de ${H.R}` : `Ronda ${cur.n} · después de ${cur.pos} de ${cur.of} preguntas`}</div><h1 class="display" style="font-size:clamp(40px,6vw,80px)">Los más buscados</h1></div>
+  <div class="board">${r.map((t,i) => `<div class="brow"><span class="pos">${i+1}</span><span class="nm">${esc(t.name)}</span><span class="gain">${t.last?'+'+t.last:''}</span><span class="pts">${t.score.toLocaleString('es-HN')}</span></div>`).join('')}</div>
+  <div class="row" style="justify-content:center"><button class="btn primary big" data-act="next">${roundEnd ? `Ir a la ronda ${cur.n + 1}` : 'Siguiente pregunta'}</button></div>`;
+}
+
+function renderEnd(){
+  H.phase = 'end'; clearInterval(H.tick); SFX.duck(false); SFX.fanfare();
+  const r = ranked();
+  let lastWin = null, best = 0;
+  if (H.cfg.roundPrize){
+    H.teams.forEach(t => { const g = t.score - (t.rb||0); if (g > best){ best = g; lastWin = t } });
+    H.teams.forEach(t => t.rb = t.score);
+  }
+  r.forEach((t,i) => { if (!t.manual) send(t, {t:'end', rank:i+1, n:r.length, score:t.score, prize: [i===0 ? prize('final') : '', t===lastWin ? prize('round') : ''].filter(Boolean).join(' + ')}) });
+  const pod = [r[1], r[0], r[2]];
+  app.innerHTML = `${topBar()}
+  <div style="text-align:center"><div class="eyebrow">Fin de las ${H.R} rondas · gana el mayor puntaje</div><h1 class="display" style="font-size:clamp(44px,7vw,96px)">Se busca: <span style="color:var(--amber)">${esc(r[0]?r[0].name:'nadie')}</span></h1></div>
+  ${r[0] && r[0].score > 0 ? `<div class="prize"><div class="stack" style="gap:4px;min-width:0"><div class="eyebrow">Gran premio</div><div class="big"><span>${esc(r[0].name)}</span> se lleva ${esc(prize('final'))}</div>${lastWin ? `<div class="muted">Ganador de la ronda ${H.R}: <strong style="color:var(--paper)">${esc(lastWin.name)}</strong> se lleva ${esc(prize('round'))}</div>` : ''}</div></div>` : ''}
+  <div class="podium">${pod.map((t,i) => t ? `<div class="pod p${[2,1,3][i]}"><div class="place">${[2,1,3][i]}°</div><div class="nm">${esc(t.name)}</div><div class="pts">${t.score.toLocaleString('es-HN')} pts</div></div>` : '<div></div>').join('')}</div>
+  ${r.length > 3 ? `<div class="board">${r.slice(3).map((t,i) => `<div class="brow"><span class="pos">${i+4}</span><span class="nm">${esc(t.name)}</span><span></span><span class="pts">${t.score.toLocaleString('es-HN')}</span></div>`).join('')}</div>` : ''}
+  <div class="row" style="justify-content:center"><button class="btn primary big" data-act="again">Jugar otra vez con las mismas mesas</button><button class="btn big" data-act="setup">Nueva partida</button></div>`;
+}
+
+function playAgain(){
+  H.qs = buildQs();
+  H.qi = -1; H.teams.forEach(t => { t.score = 0; t.last = 0; t.rb = 0; send(t, {t:'welcome', name:t.name, score:0}) });
+  H.phase = 'lobby'; djBroadcast(); renderLobby();
+}
+
+/* ================= JUGADOR (celular) ================= */
+const P = { code:'', name:'', peer:null, conn:null, score:0 };
+
+function renderJoin(code){
+  app.innerHTML = `<div class="phone">${topBar()}
+    <form class="panel stack" id="joinForm">
+      <div class="eyebrow">Sala ${esc(code)}</div>
+      <h1 class="display" style="font-size:44px">¿Cómo se llama tu mesa?</h1>
+      <input type="hidden" id="jcode" value="${esc(code)}">
+      <div class="field"><label for="jname">Nombre del equipo</label><input type="text" id="jname" maxlength="24" placeholder="Ej. Mesa 7 · Los Fugados" autofocus></div>
+      <button class="btn primary big" type="submit">Entrar a la trivia</button>
+    </form></div>`;
+  const n = ls.get('pf_name'); if (n) document.getElementById('jname').value = n;
+}
+function pScreen(inner){ app.innerHTML = `<div class="phone"><div class="phead"><span>${esc(P.name)}</span><span class="row" style="gap:10px"><span class="score">${P.score.toLocaleString('es-HN')} pts</span><button class="btn" data-act="sound" id="soundBtn" aria-pressed="${SFX.on}" style="padding:8px 12px;font-size:14px">${SFX.on ? '♪ Sí' : '♪ No'}</button></span></div>${inner}</div>` }
+function pWait(title, sub){ pScreen(`<div class="center"><h1 class="display" style="font-size:42px">${title}</h1>${sub?`<p class="muted" style="margin:0">${sub}</p>`:''}</div>`) }
+function pError(msg){ pScreen(`<div class="center"><h1 class="display" style="font-size:38px">No pudimos entrar</h1><p class="muted" style="margin:0">${msg}</p><button class="btn primary" data-act="retry">Intentar de nuevo</button><button class="btn" data-act="home">Cambiar código</button></div>`) }
+
+function pConnect(){
+  pWait('Conectando…', 'Entrando a la sala ' + esc(P.code));
+  if (typeof Peer === 'undefined') return pError('Abre la trivia desde el enlace o el QR de la pantalla del bar.');
+  try{ if (P.peer) P.peer.destroy() }catch(e){}
+  const p = new Peer({debug:0}); P.peer = p;
+  p.on('open', () => {
+    const c = p.connect(PREFIX + P.code, {reliable:true}); P.conn = c;
+    c.on('open', () => c.send({t:'join', name:P.name, dj:!!P.dj}));
+    c.on('data', onPlayerMsg);
+    c.on('close', () => pError('Se perdió la conexión con la pantalla del bar. Tus puntos se guardan si vuelves a entrar con el mismo nombre.'));
+  });
+  p.on('error', e => pError(e.type === 'peer-unavailable' ? `No encontramos la sala ${esc(P.code)}. Revisa el código en la pantalla del bar.` : 'Revisa tu conexión a internet e intenta de nuevo.'));
+}
+
+function songLinks(s){
+  const q = encodeURIComponent(s.title + ' ' + s.artist);
+  return `<div class="row"><a class="btn primary" href="https://www.youtube.com/results?search_query=${q}" target="_blank" rel="noopener">Buscar en YouTube</a><a class="btn" href="https://open.spotify.com/search/${q}" target="_blank" rel="noopener">Buscar en Spotify</a></div>`;
+}
+function renderDJJoin(code){
+  P.code = code; P.name = 'DJ'; P.dj = true;
+  app.innerHTML = `<div class="phone">${topBar()}
+    <div class="panel stack">
+      <div class="eyebrow">Sala ${esc(code)} · Modo DJ</div>
+      <h1 class="display" style="font-size:44px">Tú pones la música</h1>
+      <p class="muted" style="margin:0">En las preguntas de "Adivina la canción" aquí te sale qué canción poner. No le enseñes esta pantalla a las mesas.</p>
+      <button class="btn primary big" data-act="djgo">Conectar como DJ</button>
+    </div></div>`;
+}
+function renderDJ(d){
+  app.innerHTML = `<div class="phone"><div class="phead"><span>Modo DJ · Sala ${esc(P.code)}</span></div>
+    ${d.now ? `<div class="panel stack" style="border-color:var(--amber)"><div class="eyebrow">Pon ahora</div><h1 class="display" style="font-size:40px">${esc(d.now.title)}</h1><p style="margin:0;font-weight:700">${esc(d.now.artist)}</p>${songLinks(d.now)}</div>`
+      : `<div class="panel stack"><div class="eyebrow">Ahora</div><h2 class="display" style="font-size:32px">Sin canción por ahora</h2><p class="muted" style="margin:0">Cuando salga una pregunta de canción, aquí te aparece cuál poner.</p></div>`}
+    ${d.next && (!d.now || d.next !== d.now) ? `<div class="panel stack"><div class="eyebrow">Prepara la siguiente</div><h2 class="display" style="font-size:30px">${esc(d.next.title)}</h2><p style="margin:0;font-weight:700">${esc(d.next.artist)}</p>${songLinks(d.next)}</div>` : ''}
+  </div>`;
+}
+function onPlayerMsg(d){
+  if (!d || typeof d !== 'object') return;
+  if (P.dj){ if (d.t === 'dj') renderDJ(d); return }
+  if (d.t === 'welcome'){ P.name = d.name; P.score = d.score; pWait('¡Ya estás dentro!', 'Mira la pantalla del bar. La trivia empieza en un momento.') }
+  else if (d.t === 'q'){
+    const sec = Math.max(0, d.left/1000);
+    pScreen(`<div class="eyebrow">${esc(d.label || ('Pregunta ' + (d.i+1) + ' de ' + d.total))}</div>
+      <div class="ptrack"><i style="animation-duration:${sec}s"></i></div>
+      <div class="pq">${esc(d.text)}</div>
+      <div class="pbtns">${d.opts.map((o,i) => `<button class="ans c${i}" data-act="pick" data-i="${d.i}" data-k="${i}"><span class="sh">${SHAPES[i]}</span><span>${esc(o)}</span></button>`).join('')}</div>`);
+  }
+  else if (d.t === 'round'){ pWait(`Ronda ${d.n} de ${d.total}`, `Tema: ${esc(d.name)}. ¡Prepárense!`) }
+  else if (d.t === 'got') pWait('Respuesta enviada', 'Espera a que se acabe el tiempo.');
+  else if (d.t === 'res'){
+    P.score = d.score;
+    if (d.ok) SFX.ding(); else SFX.laugh();
+    pScreen(`<div class="center"><div class="result ${d.ok?'ok':'bad'}" style="width:100%">
+      <h1 class="display">${d.ok ? '¡Correcto!' : d.answered ? 'Fallaste' : 'Se acabó el tiempo'}</h1>
+      <p style="margin:8px 0 0;font-size:22px;font-weight:800">${d.ok ? '+' + d.pts + ' pts' : 'Era: ' + esc(d.correct)}</p></div>
+      <p class="muted" style="margin:0">Van en el puesto <strong style="color:var(--paper)">${d.rank}</strong> de ${d.n}</p></div>`);
+  }
+  else if (d.t === 'wait'){ P.score = d.score; d.prize ? pWait('¡Ganaron la ronda!', `Se llevan: ${esc(d.prize)}. Reclámenlo en la barra. Van en el puesto ${d.rank} de ${d.n}.`) : pWait(`Puesto ${d.rank} de ${d.n}`, 'Prepárense para la siguiente pregunta.') }
+  else if (d.t === 'end'){ P.score = d.score; pWait(d.rank === 1 ? '¡Son los más buscados!' : `Terminaron en el puesto ${d.rank}`, `${d.score.toLocaleString('es-HN')} puntos en total.${d.prize ? ' Se llevan: ' + esc(d.prize) + '. Reclámenlo en la barra.' : ''} ¡Gracias por jugar en Prófugos!`) }
+}
+
+/* ---------- eventos ---------- */
+app.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+  const a = b.dataset.act;
+  SFX.unlock();
+  if (a === 'sound'){ const on = SFX.toggle(); document.querySelectorAll('#soundBtn').forEach(x => { x.setAttribute('aria-pressed', on); x.textContent = x.closest('.phead') ? (on ? '♪ Sí' : '♪ No') : (on ? '♪ Sonido activado' : '♪ Sonido apagado') }); return }
+  if (a === 'home'){ history.replaceState && (()=>{ try{ history.replaceState(null,'',location.pathname) }catch(e){} })(); renderHome() }
+  else if (a === 'setup'){ try{ H.peer && H.peer.destroy() }catch(e){} H.peer = null; renderSetup() }
+  else if (a === 'cat'){ const k=b.dataset.k; H.cfg.cats.has(k)?H.cfg.cats.delete(k):H.cfg.cats.add(k); renderSetup() }
+  else if (a === 'count'){ H.cfg.count = +b.dataset.n; renderSetup() }
+  else if (a === 'time'){ H.cfg.time = +b.dataset.n; renderSetup() }
+  else if (a === 'round'){ H.cfg.round = +b.dataset.n; renderSetup() }
+  else if (a === 'rounds'){ H.cfg.rounds = +b.dataset.n; while (H.cfg.themes.length < H.cfg.rounds) H.cfg.themes.push(DEF_THEMES[H.cfg.themes.length] || 'mix'); saveThemes(); renderSetup() }
+  else if (a === 'rprize'){ H.cfg.roundPrize = b.dataset.n === '1'; ls.set('pf_rprize', H.cfg.roundPrize ? 'on' : 'off'); renderSetup() }
+  else if (a === 'per'){ H.cfg.per = +b.dataset.n; ls.set('pf_per', String(H.cfg.per)); renderSetup() }
+  else if (a === 'saveCustom'){ ls.set('pf_custom', document.getElementById('custom').value); H.cfg.cats.add('casa'); renderSetup(); }
+  else if (a === 'create') hostCreate();
+  else if (a === 'start') nextStep();
+  else if (a === 'roundgo') startQuestion();
+  else if (a === 'close') closeQuestion();
+  else if (a === 'mok') toggleManual(b.dataset.id);
+  else if (a === 'board') renderBoard();
+  else if (a === 'next') nextStep();
+  else if (a === 'again') playAgain();
+  else if (a === 'retry') pConnect();
+  else if (a === 'djgo') pConnect();
+  else if (a === 'replay'){ const q = H.qs[H.qi]; if (q && q.kind === 'mel') SFX.melody(q.notes, q.bpm) }
+  else if (a === 'peek'){ const q = H.qs[H.qi], el = document.getElementById('peek'); if (q && q.song && el){ el.textContent = q.song.title + ' — ' + q.song.artist; clearTimeout(H.peekT); H.peekT = setTimeout(() => { el.textContent = '' }, 4000) } }
+  else if (a === 'pick'){
+    if (P.conn && P.conn.open){ P.conn.send({t:'ans', i:+b.dataset.i, k:+b.dataset.k}) }
+    app.querySelectorAll('.pbtns .ans').forEach(x => { x.disabled = true; if (x !== b) x.classList.add('dim') });
+  }
+});
+app.addEventListener('change', e => {
+  const r = e.target.dataset && e.target.dataset.round;
+  if (r != null){ H.cfg.themes[+r] = e.target.value; saveThemes() }
+});
+app.addEventListener('input', e => {
+  if (e.target.id === 'prRound'){ PRIZE_MEM.round = e.target.value; ls.set('pf_prize_round', e.target.value) }
+  if (e.target.id === 'prFinal'){ PRIZE_MEM.final = e.target.value; ls.set('pf_prize_final', e.target.value) }
+});
+app.addEventListener('submit', e => {
+  e.preventDefault();
+  SFX.unlock();
+  if (e.target.id === 'joinForm'){
+    const code = (document.getElementById('jcode').value||'').replace(/\D/g,'').slice(0,4);
+    const name = (document.getElementById('jname').value||'').trim().slice(0,24);
+    if (code.length !== 4){ document.getElementById('jcode').focus(); return }
+    if (!name){ document.getElementById('jname').focus(); return }
+    P.code = code; P.name = name; ls.set('pf_name', name); pConnect();
+  } else if (e.target.id === 'manualForm'){
+    const v = document.getElementById('mname').value.trim().slice(0,24); if (!v) return;
+    H.teams.push({id:'m'+Date.now(), name:v, score:0, last:0, conn:null, online:false, manual:true}); renderLobby();
+    const m = document.getElementById('mname'); if (m) m.focus();
+  }
+});
+
+let sala = null, djMode = false; try{ const sp = new URLSearchParams(location.search); sala = sp.get('sala'); djMode = sp.get('dj') === '1' }catch(e){}
+if (sala && /^\d{4}$/.test(sala)) (djMode ? renderDJJoin(sala) : renderJoin(sala)); else renderHome();
+</script>
+
+</body></html>
