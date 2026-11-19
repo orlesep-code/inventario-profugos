@@ -1,0 +1,174 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="icon" href="../icon-192.png"><style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style></head><body><title>Manual Inventario Prófugos</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: una columna de lectura cómoda para tablet, índice fijo arriba, capturas a todo el ancho */
+:root{
+  --bg:#F3F1EC; --surface:#FFFFFF; --line:#DAD6CC; --ink:#1E2423; --muted:#5E6966;
+  --accent:#1F6F6B; --accent-ink:#FFFFFF; --accent-soft:#DCEBE9; --warn:#A8560B; --warn-soft:#FBEBD8;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#151A19; --surface:#1E2523; --line:#33403D; --ink:#EAF0EE; --muted:#A3B0AC;
+  --accent:#5FB3AC; --accent-ink:#0E1716; --accent-soft:#1F3634; --warn:#F0A55A; --warn-soft:#3A2A18; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#151A19; --surface:#1E2523; --line:#33403D; --ink:#EAF0EE; --muted:#A3B0AC;
+  --accent:#5FB3AC; --accent-ink:#0E1716; --accent-soft:#1F3634; --warn:#F0A55A; --warn-soft:#3A2A18; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:820px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{background:var(--surface);border-bottom:1px solid var(--line)}
+header.top .wrap{padding-block:24px 18px}
+h1{font-family:var(--display);font-size:clamp(32px,6vw,44px);line-height:1;text-transform:uppercase;letter-spacing:.02em;margin:0 0 8px;text-wrap:balance}
+h1 span{color:var(--accent)}
+.lead{color:var(--muted);margin:0 0 14px}
+.open{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:var(--accent-ink);text-decoration:none;font-weight:600;padding:12px 18px;border-radius:10px;min-height:48px}
+nav.toc{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+nav.toc .wrap{display:flex;gap:6px;overflow-x:auto;padding-block:8px;scrollbar-width:none}
+nav.toc a{flex:0 0 auto;text-decoration:none;color:var(--ink);border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:7px 14px;font-size:14px;font-weight:600;white-space:nowrap}
+main .wrap{padding-block:8px 48px}
+section{padding-top:28px;scroll-margin-top:64px}
+h2{font-family:var(--display);font-size:28px;text-transform:uppercase;letter-spacing:.03em;margin:0 0 10px;color:var(--accent);text-wrap:balance}
+p{margin:0 0 12px}
+figure{margin:14px 0 18px}
+figure img{display:block;width:100%;height:auto;border-radius:10px;border:1px solid var(--line);background:#fff}
+figcaption{font-size:14px;color:var(--muted);margin-top:6px}
+ul{margin:0 0 12px;padding-left:22px}
+li{margin-bottom:6px}
+ol.steps{list-style:none;padding:0;margin:0 0 14px;counter-reset:s;display:grid;gap:8px}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:36px 1fr;gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;margin:0}
+ol.steps li::before{content:counter(s);display:grid;place-items:center;width:36px;height:36px;border-radius:8px;background:var(--accent);color:var(--accent-ink);font-family:var(--display);font-size:20px;font-weight:700}
+.note{background:var(--warn-soft);border-left:4px solid var(--warn);border-radius:6px;padding:12px 14px;margin:12px 0}
+.tip{background:var(--accent-soft);border-radius:6px;padding:12px 14px;margin:12px 0}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--surface)}
+th,td{border:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+th{background:var(--accent-soft)}
+b{font-weight:600}
+a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+</style>
+
+<header class="top"><div class="wrap">
+  <h1>Prófugos <span>· Manual de inventario</span></h1>
+  <p class="lead">Cómo contar el inventario del bar en la tablet Amazon Fire y enviarlo a tu correo y a Google Sheets.</p>
+  <a class="open" href="../">Abrir la app de inventario →</a>
+</div></header>
+
+<nav class="toc" aria-label="Contenido"><div class="wrap">
+  <a href="#abrir">Abrir en la Fire</a><a href="#pantalla">Pantalla</a><a href="#contar">Contar</a><a href="#minimos">Mínimos</a><a href="#enviar">Enviar</a><a href="#correo">El correo</a><a href="#hoja">La hoja</a><a href="#despues">Después</a><a href="#rutina">Rutina</a><a href="#problemas">Problemas</a>
+</div></nav>
+
+<main><div class="wrap">
+
+<section id="abrir">
+  <h2>Abrir la app en la Fire</h2>
+  <p>La app está en esta dirección. No hace falta iniciar sesión en nada:</p>
+  <div class="tip"><b>orlesep-code.github.io/inventario-profugos/</b><br>Todo en minúsculas, con guiones y con la barra del final.</div>
+  <ol class="steps">
+    <li><div>Conectá la tablet al wifi. Hace falta internet para abrirla la primera vez y para enviar. Para contar funciona sin internet.</div></li>
+    <li><div>Abrí <b>Silk</b> y escribí la dirección, o tocá el botón verde de arriba.</div></li>
+    <li><div>Si en la barra de la dirección o en el menú de Silk aparece <b>Instalar app</b> o <b>Agregar a la pantalla de inicio</b>, tocalo. Queda el ícono verde con la «P».</div></li>
+    <li><div>Si no aparece, hacé que Silk abra directo en la app: menú de Silk → <b>Configuración</b> → <b>Página de inicio</b> → <b>Página personalizada</b>, y pegá la dirección. Así, cada vez que abrís Silk, se abre el inventario.</div></li>
+    <li><div>Tocá también la <b>estrella ☆</b> para guardarla en Favoritos.</div></li>
+  </ol>
+  <div class="note"><b>Importante:</b> la app guarda los conteos y los mínimos en la propia tablet. Usá siempre la misma tablet y Silk. Si se borran los datos de Silk, hay que volver a poner los mínimos. Los conteos ya enviados quedan a salvo en la hoja de Google.</div>
+</section>
+
+<section id="pantalla">
+  <h2>Partes de la pantalla</h2>
+  <p>La app trae todos los productos del menú: cervezas, whisky, ron, vodka, tequila, ginebra y licores, sin alcohol, y una sección para insumos de cocina.</p>
+  <figure><img src="img/1_inicio.jpg" alt="Pantalla de inicio de la app de inventario" width="1400" height="820"><figcaption>Datos del conteo arriba, categorías, productos y barra de envío abajo.</figcaption></figure>
+  <ul>
+    <li><b>Responsable:</b> quien hace el conteo. Sale en el correo y en la hoja.</li>
+    <li><b>Enviar a:</b> fijo en orlesep@gmail.com. No se puede cambiar, así nadie puede desviar el reporte.</li>
+    <li><b>Buscar:</b> escribí parte del nombre (por ejemplo «flor») para ver solo esos productos.</li>
+    <li><b>Categorías:</b> tocá una para saltar a esa sección. «Cervezas 6/16» quiere decir 6 contadas de 16. Se pone verde al completarla.</li>
+    <li><b>Barra de abajo:</b> cuántos llevás contados, cuántos están por pedir, y los botones <b>Nuevo conteo</b> y <b>Enviar a correo y Sheets</b>.</li>
+  </ul>
+</section>
+
+<section id="contar">
+  <h2>Cómo contar</h2>
+  <p><b>Cervezas, sodas y agua (unidades).</b> Usá <b>+</b> y <b>–</b>, o tocá el número y escribilo. Contá unidades sueltas: los cubetazos y las torres salen de estas mismas cervezas.</p>
+  <figure><img src="img/2_cervezas.jpg" alt="Cervezas contadas, Coors marcada para pedir" width="1400" height="820" loading="lazy"><figcaption>Borde verde: producto contado. Coors en naranja con «PEDIR»: tiene 6 y el mínimo es 12.</figcaption></figure>
+  <p><b>Licores (botellas).</b> En el número van las botellas <b>cerradas</b>. La abierta se marca con <b>0, ¼, ½ o ¾</b> según lo que le queda. La app suma ambas en el <b>Total</b>.</p>
+  <figure><img src="img/3_whisky.jpg" alt="Whisky con botellas cerradas y fracción abierta" width="1400" height="820" loading="lazy"><figcaption>Red Label: 2 cerradas + ½ = 2 ½. Black Label: 1 cerrada + ¼ = 1 ¼, debajo de su mínimo de 2.</figcaption></figure>
+  <ul>
+    <li>Un producto queda <b>contado</b> al tocar + o –, o al escribir un número. Si no hay, poné <b>0</b> para que no salga como «sin contar».</li>
+    <li>Para borrar un conteo, dejá vacío el número.</li>
+    <li><b>Cocina e insumos</b> viene vacía: escribí el nombre en «Agregar producto» y tocá <b>Agregar</b>. Sirve en cualquier categoría. Los productos agregados tienen botón <b>Quitar</b>.</li>
+    <li>Al final hay <b>Notas</b> para quebradas, faltantes o pedidos pendientes. Salen en el correo.</li>
+  </ul>
+</section>
+
+<section id="minimos">
+  <h2>Mínimos y alerta «PEDIR»</h2>
+  <p>Cada producto tiene una casilla <b>Mínimo</b>. Si el total queda por debajo, la fila se pinta de naranja, aparece <b>PEDIR</b>, el producto sale en «Por pedir» al principio del correo y queda resaltado en la hoja. Con el mínimo vacío, el producto nunca se marca. Los mínimos se quedan guardados de un conteo a otro.</p>
+</section>
+
+<section id="enviar">
+  <h2>Enviar el inventario</h2>
+  <ol class="steps">
+    <li><div>Tocá <b>Enviar a correo y Sheets</b> en la barra de abajo.</div></li>
+    <li><div>Revisá el resumen: correo, hoja, cuántos contaste, cuántos faltan y cuántos están por pedir.</div></li>
+    <li><div>Tocá el botón verde <b>Enviar a correo y Sheets</b> de la ventana.</div></li>
+    <li><div>Cuando diga <b>Inventario enviado</b>, elegí <b>Empezar nuevo conteo</b> o <b>Seguir aquí</b>.</div></li>
+  </ol>
+  <figure><img src="img/4_enviar.jpg" alt="Ventana de confirmación de envío" width="1400" height="820" loading="lazy"><figcaption>Confirmación antes de enviar.</figcaption></figure>
+  <figure><img src="img/6_enviado.jpg" alt="Mensaje de inventario enviado" width="1400" height="820" loading="lazy"><figcaption>Así se ve cuando el envío salió bien.</figcaption></figure>
+  <div class="tip"><b>Sin internet:</b> la app te avisa y el conteo sigue guardado. Conectate al wifi y volvé a tocar Enviar. También podés usar <b>Copiar</b> o <b>Abrir correo</b> en esa ventana.</div>
+</section>
+
+<section id="correo">
+  <h2>Lo que llega al correo</h2>
+  <p>Llega a orlesep@gmail.com con el asunto «Inventario Prófugos» y la fecha. Arriba va <b>Por pedir</b>, luego una tabla por categoría con la columna <b>Anterior</b>, la lista de <b>sin contar</b>, tus notas y un enlace a la hoja.</p>
+  <figure><img src="img/5_correo.jpg" alt="Ejemplo del correo de inventario" width="1400" height="1200" loading="lazy"><figcaption>Ejemplo del correo recibido.</figcaption></figure>
+</section>
+
+<section id="hoja">
+  <h2>La hoja de Google Sheets</h2>
+  <p>Cada envío también se guarda en la hoja <a href="https://docs.google.com/spreadsheets/d/1KAR5JjIlTzduMF-lj6zz2AsAaRe75Gfe_ddQpQa25uo/edit" target="_blank" rel="noopener">Inventario Prófugos</a>, que tiene dos pestañas:</p>
+  <ul>
+    <li><b>Último conteo:</b> se reemplaza en cada envío. Es la foto de cómo está el bar ahora.</li>
+    <li><b>Conteos:</b> el historial completo. Cada envío agrega sus filas con fecha y responsable, sin borrar nada.</li>
+  </ul>
+  <p>Columnas: Fecha, Responsable, Categoría, Producto, Cerradas, Abierta, Total, Anterior, Mínimo y Estado. Las filas con estado <b>PEDIR</b> salen resaltadas.</p>
+</section>
+
+<section id="despues">
+  <h2>Después de enviar</h2>
+  <ul>
+    <li>Los totales enviados quedan como <b>Anterior</b>. En el siguiente conteo ves cuánto bajó cada producto.</li>
+    <li><b>Nuevo conteo</b> borra cantidades y notas. No borra mínimos, productos agregados ni el último inventario enviado.</li>
+    <li>Si cerrás la app a medio conteo, al volver en la misma tablet sigue donde quedó.</li>
+  </ul>
+</section>
+
+<section id="rutina">
+  <h2>Rutina recomendada</h2>
+  <ul>
+    <li>Contar <b>una vez por semana</b>, el mismo día y antes de abrir (por ejemplo, el lunes).</li>
+    <li>Contar por zonas y siempre en el mismo orden: bodega, refrigeradoras, barra.</li>
+    <li>Comparar «Anterior» con las ventas de la semana. Si baja más de lo vendido, hay merma o faltante.</li>
+    <li>Usar «Por pedir» del correo para armar el pedido a proveedores.</li>
+  </ul>
+</section>
+
+<section id="problemas">
+  <h2>Problemas y soluciones</h2>
+  <div class="tbl"><table>
+    <tr><th>Qué pasa</th><th>Qué hacer</th></tr>
+    <tr><td>Sale «404» o «Site not found»</td><td>Revisá la dirección letra por letra: <b>orlesep-code.github.io/inventario-profugos/</b>. Después recargá la página.</td></tr>
+    <tr><td>No aparece «Agregar a la pantalla de inicio»</td><td>Poné la app como página de inicio de Silk (ver <a href="#abrir">Abrir la app</a>) y guardala en Favoritos.</td></tr>
+    <tr><td>«La tablet no tiene internet»</td><td>Conectate al wifi y tocá Enviar otra vez. El conteo no se pierde.</td></tr>
+    <tr><td>«No llegó la confirmación»</td><td>Puede que sí se haya guardado. Revisá la hoja o tu correo antes de enviar de nuevo, para no duplicar.</td></tr>
+    <tr><td>«La hoja respondió con un error»</td><td>Probá de nuevo en un rato. Si sigue, usá «Abrir correo» y avisá.</td></tr>
+    <tr><td>No llega el correo</td><td>Buscá en Spam o Promociones de orlesep@gmail.com.</td></tr>
+    <tr><td>Desaparecieron mínimos o conteos</td><td>Se borraron los datos de Silk o se usó otra tablet. Volvé a poner los mínimos. Lo enviado sigue en la hoja.</td></tr>
+  </table></div>
+</section>
+
+</div></main>
+</body></html>
