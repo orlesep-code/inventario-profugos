@@ -233,7 +233,8 @@ $('pinForm').onsubmit = async e => {
   $('pinMsg').innerHTML = '<div class="msg warn"><span class="spin"></span> Revisando…</div>';
   try{
     const r = await api({accion:'pin', pin:p});
-    if (r.ok){ pin = p; store.set('pin', p); $('pinMsg').innerHTML = ''; show(vista) }
+    if (r.ok && r.pinValido === true){ pin = p; store.set('pin', p); $('pinMsg').innerHTML = ''; show(vista) }
+    else if (r.ok && r.pinValido === undefined) $('pinMsg').innerHTML = '<div class="msg err">El sistema de gastos todavía no está activado. Avisale a Orles.</div>';
     else $('pinMsg').innerHTML = '<div class="msg err">PIN incorrecto. Probá de nuevo.</div>';
   }catch(err){ $('pinMsg').innerHTML = '<div class="msg err">Sin conexión. Conectate al wifi para entrar la primera vez.</div>' }
 };
@@ -293,7 +294,7 @@ async function enviarCola(){
   for (const g of c.slice()){
     try{
       const r = await api(Object.assign({}, g, {accion:'gasto', pin}));
-      if (r.ok){ c = c.filter(x => x.id !== g.id); store.set('cola', c) }
+      if (r.ok && r.gastoGuardado){ c = c.filter(x => x.id !== g.id); store.set('cola', c) }
       else { fallo = r.error || 'error'; break }
     }catch(e){ fallo = 'red'; break }
   }
@@ -314,7 +315,7 @@ $('gForm').onsubmit = async e => {
   let r = null;
   try{ r = await api(Object.assign({}, g, {accion:'gasto', pin})) }catch(err){ r = null }
   $('gSave').disabled = false; $('gSave').textContent = 'Guardar gasto';
-  if (r && r.ok){
+  if (r && r.ok && r.gastoGuardado){
     $('gMsg').innerHTML = `<div class="msg ok">Guardado: ${esc(g.categoria)} · ${L(monto)}${r.foto ? ' · con foto' : ''}.</div>`;
     limpiar(); enviarCola();
   } else if (r && r.error === 'PIN incorrecto'){
@@ -349,8 +350,9 @@ async function cargarResumen(){
   else $('rBody').innerHTML = '<div class="msg warn"><span class="spin"></span> Cargando ventas y gastos…</div>';
   try{
     const r = await api({accion:'resumen', mes, pin});
-    if (r.ok){ store.set('res_'+mes, r); if (r.mes === mes) pintarResumen(r, false) }
+    if (r.ok && r.ventas){ store.set('res_'+mes, r); if (r.mes === mes) pintarResumen(r, false) }
     else if (r.error === 'PIN incorrecto'){ pin = ''; store.set('pin',''); show('resumen') }
+    else if (r.ok && !r.ventas) $('rBody').innerHTML = '<div class="msg err">El sistema de gastos todavía no está activado.</div>';
     else $('rBody').insertAdjacentHTML('afterbegin', `<div class="msg err">La hoja respondió con un error: ${esc(r.error||'')}</div>`);
   }catch(e){
     if (!cache) $('rBody').innerHTML = '<div class="msg err">Sin conexión. Conectate al wifi para ver el resumen.</div>';
@@ -374,7 +376,7 @@ function pintarResumen(r, viejo){
   <div class="cards">
     <div class="card"><div class="k">Ventas</div><div class="v" style="color:var(--sales)">${L(v.total)}</div><div class="s">${v.turnos} cierres${v.ultima ? ' · hasta el ' + v.ultima.slice(8) + ' de ' + MESES[+v.ultima.slice(5,7)-1] : ''}<br>${flecha(dv)}</div></div>
     <div class="card"><div class="k">Gastos</div><div class="v" style="color:var(--cost)">${L(g.total)}</div><div class="s">${g.lista.length} registro${g.lista.length===1?'':'s'}<br>${flecha(dg)}</div></div>
-    <div class="card util ${util>=0?'pos':'neg'}"><div class="k">${util>=0?'Utilidad del mes':'Pérdida del mes'}</div><div class="v">${L(util)}</div><div class="s">${pct.toFixed(1)}% de la venta · tu 25%: <b>${L(util*0.25)}</b></div></div>
+    <div class="card util ${util>=0?'pos':'neg'}"><div class="k">${util>=0?'Utilidad del mes':'Pérdida del mes'}</div><div class="v">${L(util)}</div><div class="s">${pct.toFixed(1)}% de la venta · tu 20%: <b>${L(util*0.20)}</b></div></div>
   </div>
   <div class="vs" aria-label="Ventas contra gastos">
     <h2>Ventas contra gastos</h2>
