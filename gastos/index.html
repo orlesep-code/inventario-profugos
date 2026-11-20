@@ -116,6 +116,8 @@ input:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid var(-
 
 <main><div class="wrap">
 
+<div id="pendTop"></div>
+
 <section id="vPin" hidden>
   <form class="pinbox" id="pinForm">
     <h2>Escribí el PIN</h2>
@@ -233,7 +235,7 @@ $('pinForm').onsubmit = async e => {
   $('pinMsg').innerHTML = '<div class="msg warn"><span class="spin"></span> Revisando…</div>';
   try{
     const r = await api({accion:'pin', pin:p});
-    if (r.ok && r.pinValido === true){ pin = p; store.set('pin', p); $('pinMsg').innerHTML = ''; show(vista) }
+    if (r.ok && r.pinValido === true){ pin = p; store.set('pin', p); $('pinMsg').innerHTML = ''; show(vista); pintarCola() }
     else if (r.ok && r.pinValido === undefined) $('pinMsg').innerHTML = '<div class="msg err">El sistema de gastos todavía no está activado. Avisale a Orles.</div>';
     else $('pinMsg').innerHTML = '<div class="msg err">PIN incorrecto. Probá de nuevo.</div>';
   }catch(err){ $('pinMsg').innerHTML = '<div class="msg err">Sin conexión. Conectate al wifi para entrar la primera vez.</div>' }
@@ -282,10 +284,26 @@ function limpiar(){
 
 /* cola: si no hay internet, el gasto queda guardado en la tablet y se envía después */
 function cola(){ return store.get('cola', []) }
+let verPend = false;
 function pintarCola(){
   const c = cola();
-  $('pendBox').innerHTML = c.length ? `<div class="msg warn pend"><span>${c.length} gasto${c.length>1?'s':''} sin enviar, guardado${c.length>1?'s':''} en esta tablet.</span><button class="btn" type="button" id="reenviar">Enviar ahora</button></div>` : '';
-  if (c.length) $('reenviar').onclick = enviarCola;
+  $('pendBox').innerHTML = '';
+  if (!c.length){ $('pendTop').innerHTML = ''; return }
+  const total = c.reduce((s,g) => s + (Number(g.monto)||0), 0);
+  let html = `<div class="msg warn pend"><span>${c.length} gasto${c.length>1?'s':''} sin enviar, guardado${c.length>1?'s':''} en esta tablet · total ${L(total)}.</span>
+    <span class="row" style="flex:0 0 auto"><button class="btn" type="button" id="verPend">${verPend ? 'Ocultar' : 'Ver pendientes'}</button>${pin ? '<button class="btn" type="button" id="reenviar">Enviar ahora</button>' : ''}</span></div>`;
+  if (verPend){
+    const ord = c.slice().sort((x,y) => String(x.fecha) < String(y.fecha) ? -1 : 1);
+    html += `<div class="vs" style="margin-top:10px"><h2>Gastos guardados en la tablet</h2><div class="list">` +
+      ord.map((g,i) => `<div class="item"><span class="c">${i+1}. ${esc(g.categoria)}${g.concepto ? ' · ' + esc(g.concepto) : ''}</span><span class="num">${L(g.monto)}</span>
+        <span class="d">${esc(g.fecha)} · ${esc(g.pago||'')}${g.proveedor ? ' · ' + esc(g.proveedor) : ''}${g.factura ? ' · Fact. ' + esc(g.factura) : ''}${g.responsable ? ' · ' + esc(g.responsable) : ''}</span>
+        <span class="d">${g.foto ? 'Con foto' : 'Sin foto'}</span>
+        ${g.foto ? `<img src="data:image/jpeg;base64,${g.foto}" alt="Comprobante" style="grid-column:1/-1;max-width:100%;max-height:220px;border-radius:8px;border:1px solid var(--line);margin-top:6px">` : ''}</div>`).join('') +
+      `</div><div class="bar" style="grid-template-columns:1fr auto"><b>Total</b><span class="num">${L(total)}</span></div></div>`;
+  }
+  $('pendTop').innerHTML = html;
+  $('verPend').onclick = () => { verPend = !verPend; pintarCola() };
+  if (pin) $('reenviar').onclick = enviarCola;
 }
 let enviando = false;
 async function enviarCola(){
